@@ -1,0 +1,17 @@
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Infra.deps.json
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Infra.runtimeconfig.json
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Infra.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Infra.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Core.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\bin\Debug\net8.0\YksTakipApp.Core.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.csproj.AssemblyReference.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.AssemblyInfoInputs.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.AssemblyInfo.cs
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.csproj.CoreCompileInputs.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakip.0698B4AA.Up2Date
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\refint\YksTakipApp.Infra.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.genruntimeconfig.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\ref\YksTakipApp.Infra.dll
