@@ -1,0 +1,17 @@
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Application.deps.json
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Application.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Application.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Core.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Infra.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Core.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\bin\Debug\net8.0\YksTakipApp.Infra.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.csproj.AssemblyReference.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.AssemblyInfoInputs.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.AssemblyInfo.cs
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.csproj.CoreCompileInputs.cache
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakip.B5BF0E2B.Up2Date
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\refint\YksTakipApp.Application.dll
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.pdb
+C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\ref\YksTakipApp.Application.dll
