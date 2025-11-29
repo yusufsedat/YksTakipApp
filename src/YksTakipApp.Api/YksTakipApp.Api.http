@@ -1,0 +1,6 @@
+@YksTakipApp.Api_HostAddress = http://localhost:5278
+
+GET {{YksTakipApp.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
