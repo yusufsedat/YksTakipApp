@@ -3,15 +3,13 @@ using Amazon.Lambda.AspNetCoreServer;
 namespace YksTakipApp.Api;
 
 /// <summary>
-/// AWS Lambda için entry point. SAM template tarafından kullanılır.
-/// Minimal API için APIGatewayHttpApiV2ProxyFunction kullanıyoruz.
+/// AWS Lambda için entry point
+/// Minimal API için APIGatewayHttpApiV2ProxyFunction kullanıyor
 /// </summary>
 public class LambdaEntryPoint : APIGatewayHttpApiV2ProxyFunction
 {
     protected override void Init(IWebHostBuilder builder)
     {
-        // Program.cs'deki tüm konfigürasyonu kullan
-        // AddAWSLambdaHosting zaten Program.cs'de eklenmiş
         builder
             .UseContentRoot(Directory.GetCurrentDirectory())
             .UseLambdaServer();

@@ -15,7 +15,7 @@ using YksTakipApp.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Opsiyonel: AWS Secrets Manager'dan konfig değerlerini yükle
+// AWS Secrets Manager'dan konfig değerlerini yükle
 var secretName = Environment.GetEnvironmentVariable("AWS__SECRETS_NAME");
 var secrets = await YksTakipApp.Api.Helpers.SecretsLoader.TryLoadFromAwsAsync(secretName);
 if (secrets is not null)
@@ -26,15 +26,13 @@ if (secrets is not null)
     }
 }
 
-// -----------------------------------------------------------------------------
-// ✅ AWS Lambda Hosting (Sadece Lambda'da aktif olur)
+// AWS Lambda Hosting
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
-// -----------------------------------------------------------------------------
 
-// 💾 Database (MySQL + EF Core)
+// Database (MySQL + EF Core)
 builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
-    // Ortam değişkeni öncelikli (ConnectionStrings__DefaultConnection desteklenir)
+    
     var connStr = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
                  ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -54,7 +52,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
 });
 builder.Services.AddScoped<DbContext, AppDbContext>();
 
-// 🌐 CORS (React Native / Web istemcileri için)
+// CORS (React Native / Web istemcileri için)
 builder.Services.AddCors(options =>
 {      
 
@@ -84,19 +82,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 🔐 JWT Authentication
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key") ?? jwtSettings["Key"];
 var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer") ?? jwtSettings["Issuer"];
 var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience") ?? jwtSettings["Audience"];
 
-// Production guard: zayıf veya eksik anahtar/issuer/audience engelle
+// Production guard
 if (builder.Environment.IsProduction())
 {
     if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey == "super-secret-key-change-this-later")
         throw new InvalidOperationException("JWT key is not securely configured in production. Provide Jwt__Key via environment/secret store.");
     
-    // JWT key minimum uzunluk kontrolü (güvenlik için en az 32 karakter)
+    // JWT key minimum uzunluk kontrolü
     if (jwtKey!.Length < 32)
         throw new InvalidOperationException("JWT key must be at least 32 characters long in production.");
     
@@ -126,7 +124,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Admin"));
 });
 
-// 🚦 Rate Limiting
+// Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("login", opt =>
@@ -143,7 +141,7 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// 🧩 Swagger
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -180,14 +178,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 📜 HTTP Logging servisi (UseHttpLogging middleware için gerekli)
+// HTTP Logging servisi
 builder.Services.AddHttpLogging(options =>
 {
     options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestPropertiesAndHeaders |
                             Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
 });
 
-// 🧱 Dependency Injection (Repository + Services)
+// Dependency Injection
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudyTimeService, StudyTimeService>();
@@ -196,7 +194,7 @@ builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// 🌍 Pipeline Configuration
+// Pipeline Configuration
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -204,14 +202,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Sadece geliştirme ortamında DB bağlantı testi endpoint'i
+    // DB bağlantı testi
     app.MapGet("/dbtest", async (AppDbContext db) =>
     {
         return await db.Database.CanConnectAsync() ? "✅ Connected" : "❌ Not Connected";
     });
 }
 
-// 🔒 Security Headers (Production'da)
+// Security Headers
 if (!app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>
@@ -222,7 +220,7 @@ if (!app.Environment.IsDevelopment())
         context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
         context.Response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
         
-        // HSTS (HTTPS Strict Transport Security) - Lambda'da API Gateway HTTPS kullanır
+        // HSTS
         if (context.Request.IsHttps)
         {
             context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -234,10 +232,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors("DefaultCors");
 
-// 🧯 Global Exception Handling
+// Global Exception Handling
 app.UseMiddleware<YksTakipApp.Api.Helpers.GlobalExceptionMiddleware>();
 
-// 📜 HTTP request logging (CloudWatch uyumlu)
+// HTTP request logging
 app.UseHttpLogging();
 
 app.UseRateLimiter();
@@ -245,8 +243,8 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 📚 Endpoints
-app.MapGet("/", () => "✅ YksTakipApp Lambda API running!");
+// Endpoints
+app.MapGet("/", () => "YksTakipApp API running!");
 
 app.MapUserEndpoints();
 app.MapTopicEndpoints();
@@ -254,7 +252,5 @@ app.MapExamEndpoints();
 app.MapStudyTimeEndpoints();
 app.MapStatsEndpoints();
 
-// 🚀 Run
-// Lambda'da AddAWSLambdaHosting otomatik olarak app.Run()'u handle eder
-// Local development'ta normal şekilde çalışır
+// Run
 app.Run();

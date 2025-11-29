@@ -1,9 +1,8 @@
-# -------------------------------------------------------------------
-# 1️⃣ Build aşaması (.NET 8 SDK, AMD64 mimarisi)
-# -------------------------------------------------------------------
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Copy solution and project files
 # Solution ve proje dosyalarını kopyala
 COPY YksTakipApp.sln ./
 COPY src/YksTakipApp.Core/YksTakipApp.Core.csproj ./YksTakipApp.Core/
@@ -11,10 +10,10 @@ COPY src/YksTakipApp.Infra/YksTakipApp.Infra.csproj ./YksTakipApp.Infra/
 COPY src/YksTakipApp.Application/YksTakipApp.Application.csproj ./YksTakipApp.Application/
 COPY src/YksTakipApp.Api/YksTakipApp.Api.csproj ./YksTakipApp.Api/
 
-# Restore aşaması (bağımlılıkların yüklenmesi)
+# Restore
 RUN dotnet restore ./YksTakipApp.Api/YksTakipApp.Api.csproj
 
-# Tüm kaynak kodlarını kopyala
+# Copy all source code
 COPY src/YksTakipApp.Core ./YksTakipApp.Core/
 COPY src/YksTakipApp.Infra ./YksTakipApp.Infra/
 COPY src/YksTakipApp.Application ./YksTakipApp.Application/
@@ -22,19 +21,16 @@ COPY src/YksTakipApp.Api ./YksTakipApp.Api/
 
 COPY src/YksTakipApp.Api/appsettings.json ./YksTakipApp.Api/
 
-# Build + Publish (Release)
+# Build + Publish
 RUN dotnet publish ./YksTakipApp.Api/YksTakipApp.Api.csproj -c Release -o /app/publish
 
-# -------------------------------------------------------------------
-# 2️⃣ Runtime aşaması (AWS Lambda .NET 8 tabanlı)
-# -------------------------------------------------------------------
 FROM public.ecr.aws/lambda/dotnet:8 AS runtime
 WORKDIR /var/task
 
-# Build edilen dosyaları kopyala
+# Copy built files
 COPY --from=build /app/publish .
 
-# Lambda giriş noktası (.NET entrypoint)
+# Lambda entrypoint
 CMD ["YksTakipApp.Api"]
 
 
