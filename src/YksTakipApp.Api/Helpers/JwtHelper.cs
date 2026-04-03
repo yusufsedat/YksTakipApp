@@ -16,7 +16,7 @@ namespace YksTakipApp.Api.Helpers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             // Hem "sub" hem ClaimTypes.NameIdentifier
-            var role = "User"; // TODO: İhtiyaca göre veri kaynağından alınabilir
+            var role = string.IsNullOrWhiteSpace(user.Role) ? "User" : user.Role;
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // standard subject

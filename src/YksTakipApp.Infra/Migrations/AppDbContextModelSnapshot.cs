@@ -22,6 +22,41 @@ namespace YksTakipApp.Infra.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ExamDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Blank")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Correct")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExamResultId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Net")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
+
+                    b.Property<int>("Wrong")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamResultId");
+
+                    b.ToTable("ExamDetails");
+                });
+
             modelBuilder.Entity("YksTakipApp.Core.Entities.ExamResult", b =>
                 {
                     b.Property<int>("Id")
@@ -33,9 +68,27 @@ namespace YksTakipApp.Infra.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("Difficulty")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ErrorReasons")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<string>("ExamName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("ExamType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("TYT");
 
                     b.Property<double>("NetAyt")
                         .HasColumnType("double");
@@ -43,14 +96,102 @@ namespace YksTakipApp.Infra.Migrations
                     b.Property<double>("NetTyt")
                         .HasColumnType("double");
 
+                    b.Property<string>("Subject")
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExamType");
+
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "Date");
+
                     b.ToTable("ExamResults");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ProblemNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImageBase64")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("SolutionLearned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("TagsJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ProblemNotes");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("DayOfMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EndMinute")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Recurrence")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("StartMinute")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ScheduleEntries");
                 });
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.StudyTime", b =>
@@ -67,10 +208,17 @@ namespace YksTakipApp.Infra.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TopicId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("TopicId");
 
                     b.HasIndex("UserId");
 
@@ -87,13 +235,26 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Subject");
 
                     b.ToTable("Topics");
                 });
@@ -111,17 +272,27 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -141,7 +312,20 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.HasIndex("TopicId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("UserTopics");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ExamDetail", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.ExamResult", "ExamResult")
+                        .WithMany("ExamDetails")
+                        .HasForeignKey("ExamResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExamResult");
                 });
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.ExamResult", b =>
@@ -155,13 +339,49 @@ namespace YksTakipApp.Infra.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ProblemNote", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.User", "User")
+                        .WithMany("ProblemNotes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleEntry", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.Topic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("YksTakipApp.Core.Entities.User", "User")
+                        .WithMany("ScheduleEntries")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Topic");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("YksTakipApp.Core.Entities.StudyTime", b =>
                 {
+                    b.HasOne("YksTakipApp.Core.Entities.Topic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("YksTakipApp.Core.Entities.User", "User")
                         .WithMany("StudyTimes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Topic");
 
                     b.Navigation("User");
                 });
@@ -185,6 +405,11 @@ namespace YksTakipApp.Infra.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ExamResult", b =>
+                {
+                    b.Navigation("ExamDetails");
+                });
+
             modelBuilder.Entity("YksTakipApp.Core.Entities.Topic", b =>
                 {
                     b.Navigation("UserTopics");
@@ -193,6 +418,10 @@ namespace YksTakipApp.Infra.Migrations
             modelBuilder.Entity("YksTakipApp.Core.Entities.User", b =>
                 {
                     b.Navigation("ExamResults");
+
+                    b.Navigation("ProblemNotes");
+
+                    b.Navigation("ScheduleEntries");
 
                     b.Navigation("StudyTimes");
 

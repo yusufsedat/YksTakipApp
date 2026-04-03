@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using YksTakipApp.Api.DTOs;
 using YksTakipApp.Core.Interfaces;
-using YksTakipApp.Api.Helpers; // 🔹 GetUserId() uzantısı için
+using YksTakipApp.Api.Helpers; 
 
 namespace YksTakipApp.Api.Endpoints
 {
@@ -10,7 +10,7 @@ namespace YksTakipApp.Api.Endpoints
     {
         public static void MapTopicEndpoints(this WebApplication app)
         {
-            // 🔹 Yeni konu ekleme (admin veya system kullanımı)
+            // Yeni konu ekleme (sadece Admin — global katalog)
             app.MapPost("/topics", [Authorize] async (
                 TopicCreateRequest req,
                 IValidator<TopicCreateRequest> validator,
@@ -20,15 +20,17 @@ namespace YksTakipApp.Api.Endpoints
                 var validation = await validator.ValidateAsync(req);
                 if (!validation.IsValid)
                     return ctx.ValidationProblem(validation.ToDictionary());
-                await service.AddTopicAsync(req.Name, req.Category);
+                await service.AddTopicAsync(req.Name, req.Category, req.Subject ?? "");
                 return Results.Ok(new { message = "Konu eklendi." });
-            }).RequireRateLimiting("writes");
+            })
+                .RequireAuthorization("AdminOnly")
+                .RequireRateLimiting("writes");
 
-            // 🔹 Tüm konuları listeleme
+            // Tüm konuları listeleme
             app.MapGet("/topics", async (ITopicService service, int page = 1, int pageSize = 20, string? sort = null) =>
             {
                 page = page < 1 ? 1 : page;
-                pageSize = Math.Clamp(pageSize, 1, 100);
+                pageSize = Math.Clamp(pageSize, 1, 500);
 
                 var topics = await service.GetAllAsync();
                 var total = topics.Count();
@@ -50,10 +52,10 @@ namespace YksTakipApp.Api.Endpoints
                 return Results.Ok(new { items, meta = new { page, pageSize, total } });
             });
 
-            // 🔹 Kullanıcının konu durumlarını alma
+            // Kullanıcının konu durumlarını al
             app.MapGet("/user/topics", [Authorize] async (ITopicService service, HttpContext ctx) =>
             {
-                var userId = ctx.GetUserId(); // güvenli claim alma
+                var userId = ctx.GetUserId();
                 if (userId is null)
                     return Results.Unauthorized();
 
@@ -61,7 +63,7 @@ namespace YksTakipApp.Api.Endpoints
                 return Results.Ok(data);
             });
 
-            // 🔹 Kullanıcıya konu ekleme (yeni konuyu kendi listesine ekler)
+            // Kullanıcıya konu ekleme
             app.MapPost("/user/topics/add", [Authorize] async (
                 UserTopicAddRequest req,
                 IValidator<UserTopicAddRequest> validator,
@@ -87,7 +89,7 @@ namespace YksTakipApp.Api.Endpoints
                 }
             }).RequireRateLimiting("writes");
 
-            // 🔹 Kullanıcının konu durumunu güncelleme (sadece mevcut konular için)
+            // Kullanıcının konu durumunu güncelle
             app.MapPost("/user/topics/update", [Authorize] async (
                 UserTopicUpdateRequest req,
                 IValidator<UserTopicUpdateRequest> validator,
@@ -106,6 +108,27 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     await service.UpdateUserTopicAsync(userId.Value, req.TopicId, req.Status);
                     return Results.Ok(new { message = "Durum güncellendi." });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            }).RequireRateLimiting("writes");
+
+            // Kullanıcı listesinden konu kaldır (UserTopic silinir; global Topic kalır)
+            app.MapDelete("/user/topics/{topicId:int}", [Authorize] async (
+                int topicId,
+                ITopicService service,
+                HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null)
+                    return Results.Unauthorized();
+
+                try
+                {
+                    await service.RemoveUserTopicAsync(userId.Value, topicId);
+                    return Results.Ok(new { message = "Konu listenizden kaldırıldı." });
                 }
                 catch (InvalidOperationException ex)
                 {

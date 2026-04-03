@@ -15,3 +15,11 @@ C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\refint
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.pdb
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\YksTakipApp.Infra.genruntimeconfig.cache
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Infra\obj\Debug\net8.0\ref\YksTakipApp.Infra.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Infra.deps.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Infra.runtimeconfig.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Infra.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Infra.pdb
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Infra.deps.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Infra.runtimeconfig.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Infra.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Infra.pdb

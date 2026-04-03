@@ -26,7 +26,8 @@ namespace YksTakipApp.Application.Services
             {
                 Name = name,
                 Email = email,
-                PasswordHash = hashed
+                PasswordHash = hashed,
+                Role = "User"
             };
 
             await _repository.AddAsync(user);

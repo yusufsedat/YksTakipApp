@@ -17,6 +17,9 @@ namespace YksTakipApp.Api.Validators
                 .NotEmpty()
                 .Must(category => AllowedCategories.Contains(category))
                 .WithMessage("Category TYT veya AYT olmalıdır.");
+
+            RuleFor(x => x.Subject)
+                .MaximumLength(60);
         }
     }
 }

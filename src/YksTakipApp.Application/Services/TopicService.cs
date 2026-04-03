@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using YksTakipApp.Core.Entities;
 using YksTakipApp.Core.Interfaces;
+using System.Data.Common;
 
 namespace YksTakipApp.Application.Services
 {
@@ -15,9 +16,9 @@ namespace YksTakipApp.Application.Services
             _userTopicRepo = userTopicRepo;
         }
 
-        public async Task AddTopicAsync(string name, string category)
+        public async Task AddTopicAsync(string name, string category, string subject = "")
         {
-            await _topicRepo.AddAsync(new Topic { Name = name, Category = category });
+            await _topicRepo.AddAsync(new Topic { Name = name, Category = category, Subject = subject ?? "" });
             await _topicRepo.SaveChangesAsync();
         }
 
@@ -46,7 +47,23 @@ namespace YksTakipApp.Application.Services
                 TopicId = topicId, 
                 Status = TopicStatus.NotStarted 
             });
-            await _userTopicRepo.SaveChangesAsync();
+            try
+            {
+                await _userTopicRepo.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // Aynı anda iki istek gelirse "existing == null" kontrolünden sonra da çift insert olabilir.
+                // MySQL duplicate key durumunu, endpoint'in yakalayacağı InvalidOperationException'a çeviriyoruz.
+                var msg = ex.InnerException?.Message ?? ex.Message;
+                if (msg.Contains("Duplicate entry", StringComparison.OrdinalIgnoreCase) ||
+                    msg.Contains("usertopics.PRIMARY", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Bu konu zaten kullanıcının listesinde mevcut.");
+                }
+
+                throw;
+            }
         }
 
         public async Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status)
@@ -60,6 +77,16 @@ namespace YksTakipApp.Application.Services
 
             existing.Status = status;
             _userTopicRepo.Update(existing);
+            await _userTopicRepo.SaveChangesAsync();
+        }
+
+        public async Task RemoveUserTopicAsync(int userId, int topicId)
+        {
+            var existing = (await _userTopicRepo.FindAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
+            if (existing is null)
+                throw new InvalidOperationException("Bu konu listenizde yok.");
+
+            _userTopicRepo.Remove(existing);
             await _userTopicRepo.SaveChangesAsync();
         }
     }

@@ -10,7 +10,7 @@ namespace YksTakipApp.Api.Endpoints
     {
         public static void MapUserEndpoints(this WebApplication app)
         {
-            // 🔹 Kullanıcı kayıt
+            // Kullanıcı kayıt
             app.MapPost("/users/register", async (
                 RegisterRequest request,
                 IValidator<RegisterRequest> validator,
@@ -29,11 +29,11 @@ namespace YksTakipApp.Api.Endpoints
                 return Results.Ok(new
                 {
                     message = "Kayıt başarılı!",
-                    user = new { user.Id, user.Name, user.Email }
+                    user = new { user.Id, user.Name, user.Email, role = user.Role }
                 });
             });
 
-            // 🔹 Kullanıcı giriş
+            // Kullanıcı giriş
             app.MapPost("/users/login", async (
                 LoginRequest request,
                 IValidator<LoginRequest> validator,
@@ -57,16 +57,17 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     message = "Giriş başarılı!",
                     token,
-                    user = new { user.Id, user.Name, user.Email }
+                    user = new { user.Id, user.Name, user.Email, role = user.Role }
                 });
             }).RequireRateLimiting("login");
 
-            // 🔹 Kullanıcı profilini döndür (Authorize zorunlu)
+            // Kullanıcı profilini döndür (Authorize zorunlu)
             app.MapGet("/users/me", [Authorize] async (
                 IUserService userService,
                 ITopicService topicService,
                 IStudyTimeService studyService,
                 IExamService examService,
+                IStatsService statsService,
                 HttpContext ctx) =>
             {
                 var userId = ctx.GetUserId();
@@ -80,17 +81,20 @@ namespace YksTakipApp.Api.Endpoints
                 var topics = await topicService.GetUserTopicsAsync(userId.Value);
                 var totalMinutes = await studyService.GetTotalMinutesLast7DaysAsync(userId.Value);
                 var exams = await examService.GetUserExamsAsync(userId.Value);
+                var examStreakDays = await statsService.GetExamStreakDaysAsync(userId.Value);
 
                 var profile = new
                 {
                     id = user.Id,
                     name = user.Name,
                     email = user.Email,
+                    role = user.Role,
                     topics,
                     stats = new
                     {
                         totalMinutesLast7Days = totalMinutes,
-                        examCount = exams.Count()
+                        examCount = exams.Count(),
+                        examStreakDays
                     }
                 };
 

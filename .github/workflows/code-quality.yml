@@ -1,0 +1,38 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Run dotnet format (Code Style Check)
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+
+    - name: Run dotnet format (Whitespace Check)
+      run: dotnet format whitespace --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+
+    # Opsiyonel: Security scanning
+    # - name: Run security scan
+    #   uses: securecodewarrior/github-action-add-sarif@v1
+    #   with:
+    #     sarif-file: 'security-scan-results.sarif'
+

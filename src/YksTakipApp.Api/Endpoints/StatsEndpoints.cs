@@ -14,33 +14,54 @@ namespace YksTakipApp.Api.Endpoints
             group.MapGet("/summary", async (IStatsService statsService, HttpContext ctx) =>
             {
                 var userId = ctx.GetUserId();
-                if (userId is null)
-                    return Results.Unauthorized();
-
-                var summary = await statsService.GetSummaryAsync(userId.Value);
-                return Results.Ok(summary);
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetSummaryAsync(userId.Value));
             });
 
             group.MapGet("/weekly", async (IStatsService statsService, HttpContext ctx) =>
             {
                 var userId = ctx.GetUserId();
-                if (userId is null)
-                    return Results.Unauthorized();
-
-                var weekly = await statsService.GetWeeklyAsync(userId.Value);
-                return Results.Ok(weekly);
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetWeeklyAsync(userId.Value));
             });
 
             group.MapGet("/progress", async (IStatsService statsService, HttpContext ctx) =>
             {
                 var userId = ctx.GetUserId();
-                if (userId is null)
-                    return Results.Unauthorized();
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetProgressAsync(userId.Value));
+            });
 
-                var progress = await statsService.GetProgressAsync(userId.Value);
-                return Results.Ok(progress);
+            group.MapGet("/wins", async (IStatsService statsService, HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetWinsAsync(userId.Value));
+            });
+
+            var examStats = app.MapGroup("/exam/stats")
+                .RequireAuthorization();
+
+            examStats.MapGet("/tyt", async (IStatsService statsService, HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetTytStatsAsync(userId.Value));
+            });
+
+            examStats.MapGet("/ayt", async (IStatsService statsService, HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetAytStatsAsync(userId.Value));
+            });
+
+            examStats.MapGet("/brans", async (IStatsService statsService, HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+                return Results.Ok(await statsService.GetBransStatsAsync(userId.Value));
             });
         }
     }
 }
-

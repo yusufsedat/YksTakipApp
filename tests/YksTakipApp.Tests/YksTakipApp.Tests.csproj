@@ -12,6 +12,10 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\YksTakipApp.Application\YksTakipApp.Application.csproj" />
+    <ProjectReference Include="..\..\src\YksTakipApp.Core\YksTakipApp.Core.csproj" />
+    <ProjectReference Include="..\..\src\YksTakipApp.Api\YksTakipApp.Api.csproj" />
+    <ProjectReference Include="..\..\src\YksTakipApp.Infra\YksTakipApp.Infra.csproj" />
   </ItemGroup>
 
 </Project>

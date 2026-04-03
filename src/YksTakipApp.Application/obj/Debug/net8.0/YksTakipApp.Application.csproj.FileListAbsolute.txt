@@ -15,3 +15,9 @@ C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\refint\YksTakipApp.Application.dll
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\YksTakipApp.Application.pdb
 C:\Users\yusuf\Desktop\YksTakipApp\src\YksTakipApp.Application\obj\Debug\net8.0\ref\YksTakipApp.Application.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Application.deps.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Application.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api\YksTakipApp.Application.pdb
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Application.deps.json
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Application.dll
+c:\Users\yusuf\Desktop\YksTakipApp\.build-out-api2\YksTakipApp.Application.pdb

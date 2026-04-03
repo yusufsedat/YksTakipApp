@@ -24,7 +24,14 @@ namespace YksTakipApp.Api.Endpoints
                 var validation = await validator.ValidateAsync(request);
                 if (!validation.IsValid)
                     return ctx.ValidationProblem(validation.ToDictionary());
-                await service.AddStudyTimeAsync(userId.Value, request.DurationMinutes, request.Date);
+                try
+                {
+                    await service.AddStudyTimeAsync(userId.Value, request.DurationMinutes, request.Date, request.TopicId);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
                 return Results.Ok(new { message = "Çalışma süresi kaydedildi." });
             }).RequireRateLimiting("writes");
 
@@ -38,10 +45,20 @@ namespace YksTakipApp.Api.Endpoints
                 page = page < 1 ? 1 : page;
                 pageSize = Math.Clamp(pageSize, 1, 100);
 
-                var times = (await service.GetStudyTimesAsync(userId.Value)).OrderByDescending(t => t.Date);
+                var times = (await service.GetStudyTimesAsync(userId.Value)).OrderByDescending(t => t.Date).ThenByDescending(t => t.Id);
                 var total = times.Count();
-                var items = times.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-                return Results.Ok(new { items, meta = new { page, pageSize, total } });
+                var pageItems = times.Skip((page - 1) * pageSize).Take(pageSize)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.UserId,
+                        date = t.Date,
+                        t.DurationMinutes,
+                        topicId = t.TopicId,
+                        topicName = t.Topic != null ? t.Topic.Name : null
+                    })
+                    .ToList();
+                return Results.Ok(new { items = pageItems, meta = new { page, pageSize, total } });
             });
         }
     }

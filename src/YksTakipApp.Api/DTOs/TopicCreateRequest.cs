@@ -9,5 +9,8 @@ namespace YksTakipApp.Api.DTOs
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.RegularExpression("^(TYT|AYT)$", ErrorMessage = "Category TYT veya AYT olmalıdır.")]
         public string Category { get; set; } = null!; // TYT veya AYT
+
+        [System.ComponentModel.DataAnnotations.StringLength(60)]
+        public string Subject { get; set; } = "";
     }
 }

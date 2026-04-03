@@ -1,0 +1,112 @@
+name: Deploy to Production (Lambda)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manuel tetikleme için
+
+env:
+  AWS_REGION: eu-central-1
+  FUNCTION_NAME: yks-takip-api
+  RUNTIME: provided.al2023
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Build and Publish
+      run: |
+        dotnet restore
+        dotnet build --configuration Release
+        dotnet publish src/YksTakipApp.Api/YksTakipApp.Api.csproj --configuration Release --output ./publish
+
+    - name: Create deployment package
+      run: |
+        cd publish
+        zip -r ../yks-takip-api.zip .
+        cd ..
+
+    - name: Deploy to Lambda (Create or Update)
+      run: |
+        # Function var mı kontrol et
+        if aws lambda get-function --function-name ${{ env.FUNCTION_NAME }} --region ${{ env.AWS_REGION }} 2>/dev/null; then
+          echo "Function exists, updating..."
+          aws lambda update-function-code \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --zip-file fileb://yks-takip-api.zip \
+            --region ${{ env.AWS_REGION }}
+          
+          # Environment variables güncelle
+          aws lambda update-function-configuration \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --environment "Variables={ASPNETCORE_ENVIRONMENT=Production,AWS__SECRETS_NAME=${{ secrets.AWS_SECRETS_NAME_PROD }},CORS__AllowedOrigins=${{ secrets.CORS_ALLOWED_ORIGINS_PROD }}" \
+            --region ${{ env.AWS_REGION }}
+        else
+          echo "Function does not exist, creating..."
+          aws lambda create-function \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --runtime ${{ env.RUNTIME }} \
+            --role ${{ secrets.AWS_LAMBDA_ROLE_ARN_PROD }} \
+            --handler YksTakipApp.Api::YksTakipApp.Api.LambdaEntryPoint::FunctionHandlerAsync \
+            --zip-file fileb://yks-takip-api.zip \
+            --timeout 30 \
+            --memory-size 1024 \
+            --environment "Variables={ASPNETCORE_ENVIRONMENT=Production,AWS__SECRETS_NAME=${{ secrets.AWS_SECRETS_NAME_PROD }},CORS__AllowedOrigins=${{ secrets.CORS_ALLOWED_ORIGINS_PROD }}" \
+            --region ${{ env.AWS_REGION }}
+        fi
+
+    - name: Create/Update Function URL
+      run: |
+        # Function URL var mı kontrol et
+        if aws lambda get-function-url-config --function-name ${{ env.FUNCTION_NAME }} --region ${{ env.AWS_REGION }} 2>/dev/null; then
+          echo "Function URL already exists"
+        else
+          echo "Creating Function URL..."
+          aws lambda create-function-url-config \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --auth-type NONE \
+            --cors "AllowOrigins=${{ secrets.CORS_ALLOWED_ORIGINS_PROD }},AllowMethods=GET,POST,PUT,DELETE,OPTIONS,AllowHeaders=Content-Type,Authorization" \
+            --region ${{ env.AWS_REGION }}
+        fi
+
+    - name: Get Function URL
+      run: |
+        FUNCTION_URL=$(aws lambda get-function-url-config \
+          --function-name ${{ env.FUNCTION_NAME }} \
+          --region ${{ env.AWS_REGION }} \
+          --query FunctionUrl \
+          --output text)
+        echo "Function URL: $FUNCTION_URL"
+        echo "FUNCTION_URL=$FUNCTION_URL" >> $GITHUB_ENV
+
+    - name: Health Check
+      run: |
+        sleep 10  # Lambda cold start için bekle
+        curl -f ${{ env.FUNCTION_URL }}/ || exit 1
+
+    - name: Run Database Migration (Optional)
+      if: success()
+      run: |
+        # Migration için RDS endpoint ve credentials gerekli
+        # Bu adımı opsiyonel yapıyoruz çünkü migration genellikle manuel yapılır
+        echo "Database migration should be run manually after deployment"
+        # dotnet ef database update --project src/YksTakipApp.Infra --connection "${{ secrets.RDS_CONNECTION_STRING_PROD }}"
+

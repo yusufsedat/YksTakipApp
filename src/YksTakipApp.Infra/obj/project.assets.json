@@ -2137,11 +2137,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
+      "projectUniqueName": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
       "projectName": "YksTakipApp.Infra",
-      "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
+      "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
       "packagesPath": "C:\\nuget",
-      "outputPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\obj\\",
+      "outputPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2219,7 +2219,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.311/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
