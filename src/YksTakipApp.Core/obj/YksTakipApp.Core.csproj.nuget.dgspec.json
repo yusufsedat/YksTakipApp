@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {}
+    "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {
+    "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj",
+        "projectUniqueName": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj",
         "projectName": "YksTakipApp.Core",
-        "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj",
+        "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj",
         "packagesPath": "C:\\nuget",
-        "outputPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\obj\\",
+        "outputPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -60,12 +60,31 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[8.0.24, 8.0.24]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[8.0.24, 8.0.24]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+              "version": "[8.0.24, 8.0.24]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.311/PortableRuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "KMOFTq4oZNU=",
+  "dgSpecHash": "nRslgBQlobU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
+  "projectFilePath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
   "expectedPackageFiles": [
     "C:\\nuget\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\nuget\\microsoft.entityframeworkcore\\8.0.20\\microsoft.entityframeworkcore.8.0.20.nupkg.sha512",
@@ -19,7 +19,10 @@
     "C:\\nuget\\microsoft.extensions.options\\8.0.2\\microsoft.extensions.options.8.0.2.nupkg.sha512",
     "C:\\nuget\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
     "C:\\nuget\\mysqlconnector\\2.3.5\\mysqlconnector.2.3.5.nupkg.sha512",
-    "C:\\nuget\\pomelo.entityframeworkcore.mysql\\8.0.3\\pomelo.entityframeworkcore.mysql.8.0.3.nupkg.sha512"
+    "C:\\nuget\\pomelo.entityframeworkcore.mysql\\8.0.3\\pomelo.entityframeworkcore.mysql.8.0.3.nupkg.sha512",
+    "C:\\nuget\\microsoft.netcore.app.runtime.win-x64\\8.0.24\\microsoft.netcore.app.runtime.win-x64.8.0.24.nupkg.sha512",
+    "C:\\nuget\\microsoft.windowsdesktop.app.runtime.win-x64\\8.0.24\\microsoft.windowsdesktop.app.runtime.win-x64.8.0.24.nupkg.sha512",
+    "C:\\nuget\\microsoft.aspnetcore.app.runtime.win-x64\\8.0.24\\microsoft.aspnetcore.app.runtime.win-x64.8.0.24.nupkg.sha512"
   ],
   "logs": []
 }
