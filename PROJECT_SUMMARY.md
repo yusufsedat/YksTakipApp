@@ -20,7 +20,7 @@
 | Veritabanı | MySQL 8 (EF Core migrations) |
 | Kimlik doğrulama | JWT, BCrypt, Admin/User rolleri |
 | Mobil | Expo / React Native (TypeScript), Expo Router |
-| Dağıtım (hedef) | AWS Lambda + RDS (hazırlık mevcut; prod opsiyonel) |
+| Dağıtım (hedef) | Railway (API + MySQL plugin veya harici DB; `Dockerfile` kökten build) |
 
 ### Mevcut durum (özet)
 
@@ -44,7 +44,7 @@
 - **İstatistikler**: Özet, haftalık dk (tam 7 gün), haftalık karşılaştırma, küçük zaferler (`completedTopicNames`), deneme istatistikleri (TYT/AYT/branş), `netTrend` (son 10).
 - **Program**: `GET/POST/PUT/DELETE /schedule/*`; isteğe bağlı `TopicId`.
 - **Problem notları**: CRUD benzeri uçlar (proje yapısına göre).
-- **Güvenlik**: CORS, rate limiting, güvenlik başlıkları, Secrets Manager entegrasyonu (AWS), Lambda entry point ve Dockerfile.
+- **Güvenlik**: CORS, rate limiting, güvenlik başlıkları; production’da sırlar ortam değişkenleri / Railway secrets ile.
 
 ### Mobil (Expo / React Native)
 
@@ -60,9 +60,9 @@
 
 ### Operasyon ve yayın
 
-1. **AWS (veya seçilen host)**: RDS, Secrets Manager, Lambda deploy, migration, CORS ve URL testi.
+1. **Railway**: Servis oluşturma, `ConnectionStrings__DefaultConnection`, `Jwt__Key` / `Jwt__Issuer` / `Jwt__Audience`, `CORS__AllowedOrigins`, migration (`dotnet ef database update`), sağlık kontrolü.
 2. **Mobil dağıtım**: EAS Build, ortam değişkenleri (`API_BASE_URL`), mağaza listeleri ve gizlilik metni.
-3. **İzleme**: CloudWatch / basit hata günlüğü; kritik API hataları için alarm (isteğe bağlı).
+3. **İzleme**: Railway logları veya harici APM (isteğe bağlı).
 
 ### Kalite
 
@@ -91,7 +91,7 @@ Bunlar zorunlu değil; ürün olgunlaştıkça değerlendirilebilir:
 ## ÖNEMLİ NOTLAR
 
 1. Production’da `CORS__AllowedOrigins` ve güçlü `Jwt:Key` (en az 32 karakter).
-2. Hassas bilgiler için Secrets Manager veya güvenli env; repoda sırlar tutulmamalı.
+2. Hassas bilgiler için Railway (veya host) secret’ları / güvenli env; repoda sırlar tutulmamalı.
 3. Deploy sonrası `dotnet ef database update` ile şema güncel tutulmalı.
 4. Mobil tarafta API tabanı URL’si ortam dosyası veya build-time config ile verilmeli.
 
@@ -103,7 +103,7 @@ Bunlar zorunlu değil; ürün olgunlaştıkça değerlendirilebilir:
 |---------|--------|
 | Backend API | Özellik olarak hazır; deploy ortamına bağlı |
 | Mobil uygulama | Ana kapsam tamamlandı (şimdilik “bitti” kabulü) |
-| AWS / prod | İsteğe bağlı / sıradaki büyük adım |
+| Railway / prod | Sıradaki operasyonel adım |
 | Test & izleme | Kısmen; güçlendirilebilir |
 
 *Son güncelleme: Nisan 2026*

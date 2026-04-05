@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
-using Amazon.Lambda.AspNetCoreServer.Hosting;
 
 using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Application.Services;
@@ -16,22 +15,6 @@ using YksTakipApp.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// AWS Secrets Manager'dan konfig değerlerini yükle
-var secretName = Environment.GetEnvironmentVariable("AWS__SECRETS_NAME");
-var secrets = await YksTakipApp.Api.Helpers.SecretsLoader.TryLoadFromAwsAsync(secretName);
-if (secrets is not null)
-{
-    foreach (var kv in secrets)
-    {
-        builder.Configuration[kv.Key] = kv.Value;
-    }
-}
-
-// -----------------------------------------------------------------------------
-// ✅ AWS Lambda Hosting (Sadece Lambda'da aktif olur)
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
-// -----------------------------------------------------------------------------
-
 // 💾 Database (MySQL + EF Core)
 builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
@@ -41,9 +24,6 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
 
     if (string.IsNullOrWhiteSpace(connStr))
         throw new InvalidOperationException("Database connection string missing. Configure 'ConnectionStrings:DefaultConnection' via environment.");
-
-    var usingRdsProxy = connStr.Contains("proxy-", StringComparison.OrdinalIgnoreCase) ||
-                        connStr.Contains("rds.amazonaws.com", StringComparison.OrdinalIgnoreCase);
 
     options.UseMySql(connStr, ServerVersion.AutoDetect(connStr), mySqlOptions =>
     {
@@ -252,7 +232,7 @@ if (!app.Environment.IsDevelopment())
         context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
         context.Response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
         
-        // HSTS (HTTPS Strict Transport Security) - Lambda'da API Gateway HTTPS kullanır
+        // HSTS (HTTPS Strict Transport Security)
         if (context.Request.IsHttps)
         {
             context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -267,7 +247,7 @@ app.UseCors("DefaultCors");
 // 🧯 Global Exception Handling
 app.UseMiddleware<YksTakipApp.Api.Helpers.GlobalExceptionMiddleware>();
 
-// 📜 HTTP request logging (CloudWatch uyumlu)
+// 📜 HTTP request logging
 // Test ortamında HttpLogging'i devre dışı bırak (ObjectPool sorunu nedeniyle)
 if (!app.Environment.IsEnvironment("Testing"))
 {
@@ -280,7 +260,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // 📚 Endpoints
-app.MapGet("/", () => "✅ YksTakipApp Lambda API running!");
+app.MapGet("/", () => "✅ YksTakipApp API running!");
 
 app.MapUserEndpoints();
 app.MapTopicEndpoints();
@@ -308,7 +288,4 @@ if (app.Environment.IsDevelopment()
     await AdminDevSeeder.EnsureAsync(db, adminLogger);
 }
 
-// 🚀 Run
-// Lambda'da AddAWSLambdaHosting otomatik olarak app.Run()'u handle eder
-// Local development'ta normal şekilde çalışır
 app.Run();
