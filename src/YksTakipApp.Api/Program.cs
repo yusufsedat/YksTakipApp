@@ -268,6 +268,22 @@ app.UseAuthorization();
 // 📚 Endpoints
 app.MapGet("/", () => "✅ YksTakipApp API running!");
 
+// Sağlık + DB bağlantısı (Railway / izleme; JWT gerekmez)
+app.MapGet("/health", async (AppDbContext db) =>
+{
+    try
+    {
+        var ok = await db.Database.CanConnectAsync();
+        return ok
+            ? Results.Json(new { status = "ok", database = "connected" })
+            : Results.Json(new { status = "degraded", database = "unreachable" }, statusCode: 503);
+    }
+    catch
+    {
+        return Results.Json(new { status = "degraded", database = "error" }, statusCode: 503);
+    }
+});
+
 app.MapUserEndpoints();
 app.MapTopicEndpoints();
 app.MapExamEndpoints();
