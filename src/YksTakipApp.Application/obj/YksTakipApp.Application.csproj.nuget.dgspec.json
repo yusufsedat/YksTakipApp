@@ -35,8 +35,8 @@
               "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {
                 "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj"
               },
-              "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
-                "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj"
+              "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
+                "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj"
               }
             }
           }
@@ -151,14 +151,14 @@
         }
       }
     },
-    "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
+    "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
+        "projectUniqueName": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
         "projectName": "YksTakipApp.Infra",
-        "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
+        "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj",
         "packagesPath": "C:\\nuget",
-        "outputPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\obj\\",
+        "outputPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

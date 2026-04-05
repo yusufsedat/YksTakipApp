@@ -56,9 +56,13 @@ builder.Services.AddCors(options =>
         else
         {
             // Production: Sadece belirli origin'lere izin ver
-            var allowedOrigins = Environment.GetEnvironmentVariable("CORS__AllowedOrigins")?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                ?? new[] { "https://yourdomain.com" }; // Varsayılan origin'leri buraya ekle
-            
+            // Boş env veya sadece virgül → boş dizi; WithOrigins([]) exception fırlatır → 500 (Railway sık hata).
+            var fromEnv = Environment.GetEnvironmentVariable("CORS__AllowedOrigins")?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var allowedOrigins = (fromEnv is { Length: > 0 })
+                ? fromEnv
+                : new[] { "https://yourdomain.com" };
+
             policy
                 .WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
