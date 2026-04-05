@@ -25,7 +25,6 @@ RUN ASPNETCORE_ENVIRONMENT=Testing \
     Jwt__Key=test-secret-key-min-32-characters-long-for-testing-purposes-only \
     Jwt__Issuer=YksTakipApp \
     Jwt__Audience=YksTakipAppUsers \
-    MYSQL_SKIP_VERSION_DETECT=true \
     ConnectionStrings__DefaultConnection="Server=127.0.0.1;Port=3306;Database=efbundle_build;User=x;Password=x;" \
     dotnet ef migrations bundle \
     --project src/YksTakipApp.Infra/YksTakipApp.Infra.csproj \

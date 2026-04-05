@@ -16,16 +16,10 @@ namespace YksTakipApp.Infra
             var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
                 ?? "Server=localhost;Database=YksTakipApp;User=root;Password=;Port=3306";
 
-            var skipVersionDetect = string.Equals(
-                Environment.GetEnvironmentVariable("MYSQL_SKIP_VERSION_DETECT"),
-                "true",
-                StringComparison.OrdinalIgnoreCase);
-            var serverVersion = skipVersionDetect
-                ? new MySqlServerVersion(new Version(8, 0, 36))
-                : ServerVersion.AutoDetect(connectionString);
-
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseMySql(connectionString, serverVersion);
+            optionsBuilder.UseMySql(
+                connectionString,
+                new MySqlServerVersion(new Version(8, 0, 36)));
 
             return new AppDbContext(optionsBuilder.Options);
         }

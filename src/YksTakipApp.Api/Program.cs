@@ -26,14 +26,9 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
     if (string.IsNullOrWhiteSpace(connStr))
         throw new InvalidOperationException("Database connection string missing. Configure 'ConnectionStrings:DefaultConnection' via environment.");
 
-    // Docker'da `dotnet ef migrations bundle` host'u çalıştırır; AutoDetect gerçek MySQL ister.
-    var skipVersionDetect = string.Equals(
-        Environment.GetEnvironmentVariable("MYSQL_SKIP_VERSION_DETECT"),
-        "true",
-        StringComparison.OrdinalIgnoreCase);
-    var serverVersion = skipVersionDetect
-        ? new MySqlServerVersion(new Version(8, 0, 36))
-        : ServerVersion.AutoDetect(connStr);
+    // AutoDetect her çağrıda canlı MySQL bağlantısı ister (EF design-time / container başında patlar).
+    // Railway MySQL 8 ile uyumlu sabit sürüm; gerekirse ileride env ile özelleştirilir.
+    var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
 
     options.UseMySql(connStr, serverVersion, mySqlOptions =>
     {
