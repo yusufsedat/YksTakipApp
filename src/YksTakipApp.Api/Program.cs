@@ -269,17 +269,24 @@ app.UseAuthorization();
 app.MapGet("/", () => "✅ YksTakipApp API running!");
 
 // Sağlık + DB bağlantısı (Railway / izleme; JWT gerekmez)
-app.MapGet("/health", async (AppDbContext db) =>
+app.MapGet("/health", async (AppDbContext db, ILoggerFactory loggerFactory) =>
 {
+    var log = loggerFactory.CreateLogger("Health");
     try
     {
         var ok = await db.Database.CanConnectAsync();
-        return ok
-            ? Results.Json(new { status = "ok", database = "connected" })
-            : Results.Json(new { status = "degraded", database = "unreachable" }, statusCode: 503);
+        if (!ok)
+        {
+            log.LogWarning(
+                "CanConnectAsync returned false. Verify ConnectionStrings__DefaultConnection; on Railway add SslMode=Required;TrustServerCertificate=true if TLS is required.");
+            return Results.Json(new { status = "degraded", database = "unreachable" }, statusCode: 503);
+        }
+
+        return Results.Json(new { status = "ok", database = "connected" });
     }
-    catch
+    catch (Exception ex)
     {
+        log.LogError(ex, "Database health check failed.");
         return Results.Json(new { status = "degraded", database = "error" }, statusCode: 503);
     }
 });
