@@ -282,7 +282,7 @@ app.MapGet("/health", async (AppDbContext db, ILoggerFactory loggerFactory) =>
         if (!ok)
         {
             log.LogWarning(
-                "CanConnectAsync returned false. Verify ConnectionStrings__DefaultConnection; on Railway add SslMode=Required;TrustServerCertificate=true if TLS is required.");
+                "CanConnectAsync returned false. Check ConnectionStrings__DefaultConnection. MySqlConnector does not support TrustServerCertificate; use SslMode=Required or SslMode=None (private network).");
             return Results.Json(new { status = "degraded", database = "unreachable" }, statusCode: 503);
         }
 
