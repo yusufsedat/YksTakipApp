@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 using YksTakipApp.Core.Interfaces;
@@ -25,6 +26,26 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
 
     if (string.IsNullOrWhiteSpace(connStr))
         throw new InvalidOperationException("Database connection string missing. Configure 'ConnectionStrings:DefaultConnection' via environment.");
+
+    MySqlConnectionStringBuilder parsed;
+    try
+    {
+        parsed = new MySqlConnectionStringBuilder(connStr);
+    }
+    catch (ArgumentException ex)
+    {
+        throw new InvalidOperationException("ConnectionStrings__DefaultConnection is not a valid MySQL connection string.", ex);
+    }
+
+    // Log: "database '' on server ''" → Railway'de ${{...}} genişlemedi veya yanlış anahtar adları (Host değil Server; User ID değil User).
+    if (string.IsNullOrWhiteSpace(parsed.Server))
+        throw new InvalidOperationException(
+            "MySQL connection string has empty Server. On Railway: open MySQL service → Connect, copy host/port/user/db, set ConnectionStrings__DefaultConnection as " +
+            "Server=HOST;Port=3306;Database=DB;User=USER;Password=PASS;SslMode=Required; — use Variable Reference from the MySQL plugin so values are not empty.");
+    if (string.IsNullOrWhiteSpace(parsed.Database))
+        throw new InvalidOperationException("MySQL connection string has empty Database name.");
+    if (string.IsNullOrWhiteSpace(parsed.UserID))
+        throw new InvalidOperationException("MySQL connection string has empty User.");
 
     // AutoDetect her çağrıda canlı MySQL bağlantısı ister (EF design-time / container başında patlar).
     // Railway MySQL 8 ile uyumlu sabit sürüm; gerekirse ileride env ile özelleştirilir.
@@ -218,6 +239,18 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // 🌍 Pipeline Configuration
 var app = builder.Build();
+
+// Production: bekleyen EF migration'larını uygula (Pre-Deploy / efbundle yoksa tablolar oluşmaz).
+// Railway tek replika için uygundur. Çoklu instance'da yarış riski — o zaman DISABLE_AUTO_MIGRATE=true + harici migration kullan.
+if (app.Environment.IsProduction()
+    && !string.Equals(Environment.GetEnvironmentVariable("DISABLE_AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase))
+{
+    using var migrateScope = app.Services.CreateScope();
+    var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var migrateLog = migrateScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    await migrateDb.Database.MigrateAsync();
+    migrateLog.LogInformation("EF Core migrations applied (pending).");
+}
 
 if (app.Environment.IsDevelopment())
 {
