@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Application.Services;
@@ -25,7 +26,16 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
     if (string.IsNullOrWhiteSpace(connStr))
         throw new InvalidOperationException("Database connection string missing. Configure 'ConnectionStrings:DefaultConnection' via environment.");
 
-    options.UseMySql(connStr, ServerVersion.AutoDetect(connStr), mySqlOptions =>
+    // Docker'da `dotnet ef migrations bundle` host'u çalıştırır; AutoDetect gerçek MySQL ister.
+    var skipVersionDetect = string.Equals(
+        Environment.GetEnvironmentVariable("MYSQL_SKIP_VERSION_DETECT"),
+        "true",
+        StringComparison.OrdinalIgnoreCase);
+    var serverVersion = skipVersionDetect
+        ? new MySqlServerVersion(new Version(8, 0, 36))
+        : ServerVersion.AutoDetect(connStr);
+
+    options.UseMySql(connStr, serverVersion, mySqlOptions =>
     {
         mySqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,

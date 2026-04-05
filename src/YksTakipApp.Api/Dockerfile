@@ -20,7 +20,14 @@ COPY src/YksTakipApp.Api/ src/YksTakipApp.Api/
 # NOT: dotnet ef için -c = --context değil; yapılandırma için --configuration kullan.
 RUN dotnet tool install --global dotnet-ef --version 8.0.20
 ENV PATH="${PATH}:/root/.dotnet/tools"
-RUN dotnet ef migrations bundle \
+# Bundle sırasında Program.cs host oluşturur: gerçek DB/JWT yok. Sadece bu RUN için geçerli.
+RUN ASPNETCORE_ENVIRONMENT=Testing \
+    Jwt__Key=test-secret-key-min-32-characters-long-for-testing-purposes-only \
+    Jwt__Issuer=YksTakipApp \
+    Jwt__Audience=YksTakipAppUsers \
+    MYSQL_SKIP_VERSION_DETECT=true \
+    ConnectionStrings__DefaultConnection="Server=127.0.0.1;Port=3306;Database=efbundle_build;User=x;Password=x;" \
+    dotnet ef migrations bundle \
     --project src/YksTakipApp.Infra/YksTakipApp.Infra.csproj \
     --startup-project src/YksTakipApp.Api/YksTakipApp.Api.csproj \
     --configuration Release \
