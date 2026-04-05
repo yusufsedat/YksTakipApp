@@ -59,6 +59,7 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod()
                 .WithHeaders("Authorization", "Content-Type")
                 //.AllowCredentials(); // Cookie/credential gönderimi için
+                ;
         }
     });
 });
