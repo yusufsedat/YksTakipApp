@@ -45,6 +45,7 @@ const PRESET_TAGS = [
 
 function toImageUri(raw: string): string {
   const t = raw.trim();
+  if (t.startsWith('http://') || t.startsWith('https://')) return t;
   if (t.startsWith('data:')) return t;
   return `data:image/jpeg;base64,${t}`;
 }
@@ -639,7 +640,7 @@ export default function NotebookScreen() {
           ) : null
         }
         renderItem={({ item }) => {
-          const uri = toImageUri(item.imageBase64);
+          const uri = toImageUri(item.imageUrl);
           const badgeTags = item.tags.slice(0, 2);
           return (
             <View style={[styles.card, item.solutionLearned ? styles.cardStripeLearned : styles.cardStripeTodo]}>
@@ -787,9 +788,9 @@ export default function NotebookScreen() {
             </View>
             <ScrollView style={styles.sheetBody} keyboardShouldPersistTaps="handled">
               {detail ? (
-                <Pressable onPress={() => openLightbox(toImageUri(detail.imageBase64))} accessibilityRole="button">
+                <Pressable onPress={() => openLightbox(toImageUri(detail.imageUrl))} accessibilityRole="button">
                   <Image
-                    source={{ uri: toImageUri(detail.imageBase64) }}
+                    source={{ uri: toImageUri(detail.imageUrl) }}
                     style={styles.detailFullImg}
                     resizeMode="contain"
                   />

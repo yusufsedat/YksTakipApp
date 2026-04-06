@@ -92,7 +92,7 @@ namespace YksTakipApp.Api.Endpoints
         private static ProblemNoteDto ToDto(ProblemNote e) => new()
         {
             Id = e.Id,
-            ImageBase64 = e.ImageBase64,
+            ImageUrl = e.ImageUrl,
             Tags = DeserializeTags(e.TagsJson),
             SolutionLearned = e.SolutionLearned,
             CreatedAt = e.CreatedAt,

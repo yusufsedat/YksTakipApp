@@ -9,10 +9,12 @@ namespace YksTakipApp.Application.Services
         private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
         private readonly IRepository<ProblemNote> _repository;
+        private readonly IProblemNoteImageStorage _imageStorage;
 
-        public ProblemNoteService(IRepository<ProblemNote> repository)
+        public ProblemNoteService(IRepository<ProblemNote> repository, IProblemNoteImageStorage imageStorage)
         {
             _repository = repository;
+            _imageStorage = imageStorage;
         }
 
         public async Task<IReadOnlyList<ProblemNote>> ListAsync(int userId)
@@ -29,10 +31,12 @@ namespace YksTakipApp.Application.Services
 
         public async Task<ProblemNote> AddAsync(int userId, string imageBase64, IReadOnlyList<string> tags, bool solutionLearned)
         {
+            var uploaded = await _imageStorage.UploadAsync(userId, imageBase64);
             var entry = new ProblemNote
             {
                 UserId = userId,
-                ImageBase64 = imageBase64.Trim(),
+                ImageUrl = uploaded.SecureUrl,
+                ImagePublicId = uploaded.PublicId,
                 TagsJson = SerializeTags(tags),
                 SolutionLearned = solutionLearned,
                 CreatedAt = DateTime.UtcNow,
@@ -50,8 +54,14 @@ namespace YksTakipApp.Application.Services
 
             existing.TagsJson = SerializeTags(tags);
             existing.SolutionLearned = solutionLearned;
+
             if (!string.IsNullOrWhiteSpace(imageBase64))
-                existing.ImageBase64 = imageBase64.Trim();
+            {
+                await _imageStorage.DeleteAsync(existing.ImagePublicId);
+                var uploaded = await _imageStorage.UploadAsync(userId, imageBase64);
+                existing.ImageUrl = uploaded.SecureUrl;
+                existing.ImagePublicId = uploaded.PublicId;
+            }
 
             _repository.Update(existing);
             await _repository.SaveChangesAsync();
@@ -63,6 +73,7 @@ namespace YksTakipApp.Application.Services
             if (existing is null)
                 throw new InvalidOperationException("Not bulunamadı.");
 
+            await _imageStorage.DeleteAsync(existing.ImagePublicId);
             _repository.Remove(existing);
             await _repository.SaveChangesAsync();
         }

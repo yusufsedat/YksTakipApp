@@ -160,7 +160,8 @@ namespace YksTakipApp.Infra
     modelBuilder.Entity<ProblemNote>(e =>
     {
         e.HasKey(x => x.Id);
-        e.Property(x => x.ImageBase64).IsRequired();
+        e.Property(x => x.ImageUrl).IsRequired();
+        e.Property(x => x.ImagePublicId).HasMaxLength(512);
         e.Property(x => x.TagsJson)
             .HasMaxLength(4000)
             .IsRequired();

@@ -8,8 +8,11 @@ namespace YksTakipApp.Core.Entities
         public int Id { get; set; }
         public int UserId { get; set; }
 
-        /// <summary>data:image/jpeg;base64,... veya ham base64 (istemci data: ile kullanır).</summary>
-        public string ImageBase64 { get; set; } = "";
+        /// <summary>Cloudinary secure URL veya eski kayıtlarda ham/base64 (geriye dönük).</summary>
+        public string ImageUrl { get; set; } = "";
+
+        /// <summary>Cloudinary public id (silme için). Eski satırlarda null olabilir.</summary>
+        public string? ImagePublicId { get; set; }
 
         /// <summary>JSON dizi: ["Matematik","Türev"]</summary>
         public string TagsJson { get; set; } = "[]";

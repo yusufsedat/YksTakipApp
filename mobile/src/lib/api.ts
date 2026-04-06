@@ -32,9 +32,9 @@ function parseErrorMessage(body: ApiErrorBody | null, status: number): string {
 
 function networkFailureMessage(cause: unknown): string {
   const base = getApiBaseUrl();
-  const hint =
-    "Geliştirme makinesinde API açık mı (dotnet run)? Telefonda deniyorsan mobile/.env içinde " +
-    "EXPO_PUBLIC_API_URL=http://BILGISAYAR_IP:5278 kullan (ipconfig ile IPv4).";
+  const hint = __DEV__
+    ? "Geliştirme: API çalışıyor mu (dotnet run)? Telefonda mobile/.env ile EXPO_PUBLIC_API_URL (LAN IP:5278) ayarla."
+    : "Production API erişilemiyor; Railway deploy ve CORS origin’lerini kontrol et.";
   const detail = cause instanceof Error ? cause.message : String(cause);
   return `Ağ isteği başarısız — ${base}. ${hint} [${detail}]`;
 }

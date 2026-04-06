@@ -44,15 +44,17 @@ EXPOSE 8080
 
 COPY --from=build /app/publish .
 COPY --from=build /app/artifacts/efbundle ./efbundle
-RUN chmod +x ./efbundle
+COPY src/YksTakipApp.Api/railway-migrate.sh ./railway-migrate.sh
+RUN chmod +x ./efbundle ./railway-migrate.sh
 
-# Railway: PORT değişkeni; Pre-Deploy migration örneği aşağıda.
+# Railway: PORT; migration Pre-Deploy ile (railway-migrate.sh).
 CMD ["/bin/sh", "-c", "exec dotnet YksTakipApp.Api.dll --urls \"http://0.0.0.0:${PORT:-8080}\""]
 
 # -----------------------------------------------------------------------------
-# Railway — Settings → Deploy → Pre-Deploy Command (örnek):
-#   ./efbundle --connection "$ConnectionStrings__DefaultConnection"
+# Railway → Service → Settings → Deploy → Pre-Deploy Command:
+#   ./railway-migrate.sh
 #
-# Bağlantı cümlesi Railway değişkeninde tanımlı olmalı (MySQL plugin reference veya elle).
-# Pre-Deploy, yeni imaj ayağa kalkmadan önce çalışır; şema güncel olmadan API başlamaz.
+# Gerekli env (API servisinde): ConnectionStrings__DefaultConnection
+#   Örnek: Server=${{MySQL.MYSQLHOST}};Port=...;Database=...;User=...;Password=...;SslMode=None;AllowPublicKeyRetrieval=True;
+# mysql:// URL kullanma — efbundle ADO.NET formatı ister.
 # -----------------------------------------------------------------------------

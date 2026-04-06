@@ -7,8 +7,10 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Microsoft.Extensions.Options;
 
 using YksTakipApp.Core.Interfaces;
+using YksTakipApp.Application.Options;
 using YksTakipApp.Application.Services;
 using YksTakipApp.Infra;
 using YksTakipApp.Infra.Repositories;
@@ -226,6 +228,29 @@ builder.Services.AddHttpLogging(options =>
                             Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
 });
 
+// ☁️ Cloudinary (soru notu görselleri). Production’da ortam değişkenleri zorunlu.
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(CloudinarySettings.SectionName));
+builder.Services.AddSingleton<IProblemNoteImageStorage>(sp =>
+{
+    var env = sp.GetRequiredService<IHostEnvironment>();
+    var opt = sp.GetRequiredService<IOptions<CloudinarySettings>>();
+    if (env.IsEnvironment("Testing"))
+        return new StubProblemNoteImageStorage();
+    if (!opt.Value.IsConfigured)
+    {
+        if (env.IsProduction())
+            throw new InvalidOperationException(
+                "Cloudinary yapılandırılmadı. Railway’de Cloudinary__CloudName, Cloudinary__ApiKey, Cloudinary__ApiSecret tanımla.");
+        var log = sp.GetRequiredService<ILoggerFactory>().CreateLogger("Cloudinary");
+        log.LogWarning("Cloudinary ayarlı değil; stub kullanılıyor (görseller geçici olarak data URL olarak saklanır). Gerçek Cloudinary için User Secrets / appsettings kullan.");
+        return new StubProblemNoteImageStorage();
+    }
+
+    return new CloudinaryProblemNoteImageStorage(
+        opt,
+        sp.GetRequiredService<ILogger<CloudinaryProblemNoteImageStorage>>());
+});
+
 // 🧱 Dependency Injection (Repository + Services)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserService, UserService>();
@@ -240,17 +265,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // 🌍 Pipeline Configuration
 var app = builder.Build();
 
-// Production: bekleyen EF migration'larını uygula (Pre-Deploy / efbundle yoksa tablolar oluşmaz).
-// Railway tek replika için uygundur. Çoklu instance'da yarış riski — o zaman DISABLE_AUTO_MIGRATE=true + harici migration kullan.
-if (app.Environment.IsProduction()
-    && !string.Equals(Environment.GetEnvironmentVariable("DISABLE_AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase))
-{
-    using var migrateScope = app.Services.CreateScope();
-    var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var migrateLog = migrateScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-    await migrateDb.Database.MigrateAsync();
-    migrateLog.LogInformation("EF Core migrations applied (pending).");
-}
+// Production migration: Railway Pre-Deploy → ./railway-migrate.sh (Docker imajındaki efbundle).
+// Startup'ta MigrateAsync yok; Pre-Deploy başarısızsa deploy tamamlanmaz.
 
 if (app.Environment.IsDevelopment())
 {

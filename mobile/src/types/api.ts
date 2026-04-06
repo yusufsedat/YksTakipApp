@@ -41,7 +41,8 @@ export type ScheduleListResponse = { items: ScheduleEntryDto[] };
 
 export type ProblemNoteDto = {
   id: number;
-  imageBase64: string;
+  /** Cloudinary HTTPS URL veya eski kayıtlarda data:/ham base64. */
+  imageUrl: string;
   tags: string[];
   solutionLearned: boolean;
   createdAt: string;

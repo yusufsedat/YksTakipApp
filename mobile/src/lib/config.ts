@@ -2,11 +2,17 @@ import { Platform } from 'react-native';
 
 const PORT = 5278;
 
+/** Production API (Railway). Release build’da EXPO_PUBLIC_API_URL tanımlı değilse kullanılır. */
+const PRODUCTION_API_BASE_URL = 'https://ykstakipapp-production.up.railway.app';
+
 /**
- * EXPO_PUBLIC_API_URL yoksa:
- * - Android emülatör: bilgisayardaki localhost → 10.0.2.2
- * - iOS simülatör / web: localhost
- * Fiziksel telefon: mobile/.env içinde mutlaka `EXPO_PUBLIC_API_URL=http://BILGISAYAR_IP:5278` ayarla.
+ * Geliştirme (`expo start`, __DEV__):
+ * - EXPO_PUBLIC_API_URL varsa (mobile/.env) onu kullan.
+ * - Yoksa Android emülatör → 10.0.2.2, iOS sim / web → localhost.
+ *
+ * Production build (__DEV__ === false):
+ * - EAS / release’te genelde .env yok; varsayılan Railway URL’si kullanılır.
+ * - İstersen EAS Secrets veya .env ile EXPO_PUBLIC_API_URL ile override edebilirsin.
  */
 function defaultDevBaseUrl(): string {
   if (Platform.OS === 'android') {
@@ -16,7 +22,14 @@ function defaultDevBaseUrl(): string {
 }
 
 export function getApiBaseUrl(): string {
-  const url = process.env.EXPO_PUBLIC_API_URL?.trim();
-  if (url) return url.replace(/\/$/, '');
-  return defaultDevBaseUrl();
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const normalized = envUrl ? envUrl.replace(/\/$/, '') : '';
+
+  if (__DEV__) {
+    if (normalized) return normalized;
+    return defaultDevBaseUrl();
+  }
+
+  if (normalized) return normalized;
+  return PRODUCTION_API_BASE_URL;
 }
