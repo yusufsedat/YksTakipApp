@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 
+import { BrandIconSmall } from '../../src/components/BrandIconSmall';
 import { getCompactHeaderScreenOptions } from '../../src/navigation/headerScreenOptions';
 import { useTheme } from '../../src/theme';
 
@@ -10,6 +12,11 @@ export default function AppTabLayout() {
     <Tabs
       screenOptions={{
         ...getCompactHeaderScreenOptions(colors),
+        headerRight: () => (
+          <View style={{ marginRight: 14 }}>
+            <BrandIconSmall size={36} />
+          </View>
+        ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {

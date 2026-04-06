@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "YksTakip",
+    "name": "Sınav Kilit",
     "slug": "ykstakip-mobile",
     "scheme": "ykstakip",
     "version": "1.0.0",
@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon-small.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -28,7 +28,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.ykstakipmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"

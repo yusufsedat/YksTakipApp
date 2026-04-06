@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { BrandIconSmall } from '../src/components/BrandIconSmall';
 import { useAuth } from '../src/lib/auth';
 import { useTheme } from '../src/theme';
 
@@ -11,6 +12,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.bg }]}>
+        <BrandIconSmall size={132} style={{ marginBottom: 24 }} />
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
