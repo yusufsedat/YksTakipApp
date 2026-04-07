@@ -16,6 +16,7 @@ using YksTakipApp.Infra;
 using YksTakipApp.Infra.Repositories;
 using YksTakipApp.Api.Endpoints;
 using YksTakipApp.Api.Data;
+using YksTakipApp.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -260,6 +261,7 @@ builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IProblemNoteService, ProblemNoteService>();
+builder.Services.AddSingleton<IAppVersionService, AppVersionService>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // 🌍 Pipeline Configuration
@@ -351,6 +353,7 @@ app.MapStudyTimeEndpoints();
 app.MapStatsEndpoints();
 app.MapScheduleEndpoints();
 app.MapProblemNoteEndpoints();
+app.MapAppConfigEndpoints();
 
 // 🌱 Development: demo kullanıcı ve örnek veri (demo@ykstakip.local yoksa bir kez eklenir)
 if (app.Environment.IsDevelopment()
@@ -368,6 +371,22 @@ if (app.Environment.IsDevelopment()
     await DevDataSeeder.SeedAsync(db, seedLogger);
     var adminLogger = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("AdminDevSeeder");
     await AdminDevSeeder.EnsureAsync(db, adminLogger);
+}
+
+// 🚀 Production/Stage için tek seferlik müfredat seed kapısı.
+// Railway variable: SEED_YKS_CURRICULUM_ON_START=true
+if (!app.Environment.IsDevelopment()
+    && string.Equals(Environment.GetEnvironmentVariable("SEED_YKS_CURRICULUM_ON_START"), "true", StringComparison.OrdinalIgnoreCase))
+{
+    using var seedScope = app.Services.CreateScope();
+    var db = seedScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var appConfig = seedScope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var loggerFactory = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+    var seedLog = loggerFactory.CreateLogger("YksCurriculumSeed");
+
+    await YksCurriculumSeed.EnsureAsync(db, seedLog, appConfig);
+    seedLog.LogWarning(
+        "SEED_YKS_CURRICULUM_ON_START=true olduğu için YKS müfredat seed çalıştı. Tek seferlik kullanım sonrası bu env'i kapatmanız önerilir.");
 }
 
 app.Run();

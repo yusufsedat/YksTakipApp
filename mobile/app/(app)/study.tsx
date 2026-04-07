@@ -1,7 +1,9 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  AppState,
   Platform,
   Pressable,
   RefreshControl,
@@ -69,6 +71,14 @@ function formatRowDate(iso: string) {
   }
 }
 
+function formatDigital(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 export default function StudyScreen() {
   const { colors } = useTheme();
   const [items, setItems] = useState<StudyTimeDto[]>([]);
@@ -88,6 +98,11 @@ export default function StudyScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [startedAtMs, setStartedAtMs] = useState<number | null>(null);
+  const [timerSaving, setTimerSaving] = useState(false);
+  const appStateRef = useRef(AppState.currentState);
 
   const [topicRows, setTopicRows] = useState<UserTopicRow[]>([]);
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
@@ -168,6 +183,31 @@ export default function StudyScreen() {
         },
         submitDisabled: { opacity: 0.7 },
         submitText: { color: colors.onPrimary, fontWeight: '600', fontSize: rs(16, scale) },
+        timerCard: {
+          marginBottom: rs(10, scale),
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: rs(10, scale),
+          padding: rs(12, scale),
+          backgroundColor: colors.surfaceMuted,
+        },
+        timerTitle: { fontSize: rs(14, scale), color: colors.textMuted, marginBottom: rs(4, scale), fontWeight: '700' },
+        timerDisplay: { fontSize: rs(30, scale), fontWeight: '800', color: colors.primary },
+        timerHint: { fontSize: rs(12, scale), color: colors.textMuted, marginTop: rs(4, scale), marginBottom: rs(8, scale) },
+        timerButtons: { flexDirection: 'row', gap: rs(8, scale), marginTop: rs(4, scale) },
+        timerBtn: {
+          flex: 1,
+          borderRadius: rs(10, scale),
+          paddingVertical: rvs(10, vScale),
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        timerStartBtn: { backgroundColor: colors.primary },
+        timerPauseBtn: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+        timerFinishBtn: { backgroundColor: colors.admin },
+        timerResetBtn: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+        timerBtnText: { color: colors.onPrimary, fontWeight: '700', fontSize: rs(13, scale) },
+        timerBtnTextMuted: { color: colors.text, fontWeight: '700', fontSize: rs(13, scale) },
         listHeading: {
           fontSize: rs(15, scale),
           fontWeight: '600',
@@ -209,6 +249,25 @@ export default function StudyScreen() {
     () => [styles.listContent, { paddingBottom: rvs(32, vScale) + insets.bottom }],
     [styles.listContent, vScale, insets.bottom]
   );
+
+  useEffect(() => {
+    if (!isRunning || startedAtMs === null) return;
+    const timer = setInterval(() => {
+      setElapsedMs(Date.now() - startedAtMs);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isRunning, startedAtMs]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      const prev = appStateRef.current;
+      appStateRef.current = nextState;
+      if (prev.match(/inactive|background/) && nextState === 'active' && isRunning && startedAtMs !== null) {
+        setElapsedMs(Date.now() - startedAtMs);
+      }
+    });
+    return () => sub.remove();
+  }, [isRunning, startedAtMs]);
 
   const loadUserTopics = useCallback(async () => {
     try {
@@ -349,6 +408,68 @@ export default function StudyScreen() {
     }
   }
 
+  function startTimer() {
+    if (selectedTopicId == null) {
+      Alert.alert('Konu seç', 'Kronometreyi başlatmadan önce çalışma ekle kısmından bir konu seç.');
+      return;
+    }
+    if (isRunning || elapsedMs > 0) return;
+    setElapsedMs(0);
+    setStartedAtMs(Date.now());
+    setIsRunning(true);
+  }
+
+  function pauseTimer() {
+    if (!isRunning || startedAtMs === null) return;
+    setElapsedMs(Date.now() - startedAtMs);
+    setStartedAtMs(null);
+    setIsRunning(false);
+  }
+
+  function resumeTimer() {
+    if (selectedTopicId == null) {
+      Alert.alert('Konu seç', 'Devam etmeden önce çalışma konusu seçili olmalı.');
+      return;
+    }
+    if (isRunning || elapsedMs <= 0) return;
+    setStartedAtMs(Date.now() - elapsedMs);
+    setIsRunning(true);
+  }
+
+  function resetTimer() {
+    setIsRunning(false);
+    setElapsedMs(0);
+    setStartedAtMs(null);
+  }
+
+  async function finishTimer() {
+    if (selectedTopicId == null) {
+      Alert.alert('Konu seç', 'Bitirmeden önce çalışma ekle kısmından bir konu seç.');
+      return;
+    }
+    const finalMs = isRunning && startedAtMs !== null ? Date.now() - startedAtMs : elapsedMs;
+    if (finalMs < 1000) {
+      Alert.alert('Kronometre', 'Önce kronometreyi başlat.');
+      return;
+    }
+    const durationMinutes = Math.max(1, Math.round(finalMs / 60000));
+    setTimerSaving(true);
+    try {
+      await apiPost('/studytime/create', {
+        durationMinutes,
+        date: new Date().toISOString(),
+        topicId: selectedTopicId,
+      });
+      resetTimer();
+      await fetchPage(1, false);
+      Alert.alert('Başarılı', 'Çalışmalarım bölümüne eklendi!');
+    } catch (e) {
+      Alert.alert('Kayıt Hatası', e instanceof Error ? e.message : 'Süre kaydedilemedi.');
+    } finally {
+      setTimerSaving(false);
+    }
+  }
+
   if (loading && items.length === 0) {
     return (
       <View style={styles.centered}>
@@ -424,6 +545,36 @@ export default function StudyScreen() {
             </Text>
           </Pressable>
         ) : null}
+        <View style={styles.timerCard}>
+          <Text style={styles.timerTitle}>Kronometre (Seçili Konu)</Text>
+          <Text style={styles.timerDisplay}>{formatDigital(elapsedMs)}</Text>
+          <Text style={styles.timerHint}>
+            {selectedTopicLabel
+              ? `Konu: ${selectedTopicLabel}`
+              : 'Başlatmak için yukarıdan bir konu seç.'}
+          </Text>
+          <View style={styles.timerButtons}>
+            {!(isRunning || elapsedMs > 0) ? (
+              <Pressable style={[styles.timerBtn, styles.timerStartBtn]} onPress={startTimer} disabled={timerSaving}>
+                <Text style={styles.timerBtnText}>Başlat</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={[styles.timerBtn, styles.timerPauseBtn]}
+                onPress={isRunning ? pauseTimer : resumeTimer}
+                disabled={timerSaving}
+              >
+                <Text style={styles.timerBtnTextMuted}>{isRunning ? 'Duraklat' : 'Devam Et'}</Text>
+              </Pressable>
+            )}
+            <Pressable style={[styles.timerBtn, styles.timerFinishBtn]} onPress={finishTimer} disabled={timerSaving}>
+              <Text style={styles.timerBtnText}>{timerSaving ? 'Kaydediliyor…' : 'Bitir'}</Text>
+            </Pressable>
+            <Pressable style={[styles.timerBtn, styles.timerResetBtn]} onPress={resetTimer} disabled={timerSaving}>
+              <Text style={styles.timerBtnTextMuted}>Sıfırla</Text>
+            </Pressable>
+          </View>
+        </View>
         {formError ? <Text style={styles.fieldError}>{formError}</Text> : null}
         <Pressable
           style={[styles.submitBtn, submitting && styles.submitDisabled]}

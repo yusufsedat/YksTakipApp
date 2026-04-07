@@ -22,23 +22,36 @@ public static class YksCurriculumSeed
 
     private static async Task ResetAndSeedAsync(AppDbContext db, ILogger logger, CancellationToken ct)
     {
-        var utCount = await db.UserTopics.CountAsync(ct);
-        var tCount = await db.Topics.CountAsync(ct);
+        var utCount = await db.UserTopics.AsNoTracking().CountAsync(ct);
+        var tCount = await db.Topics.AsNoTracking().CountAsync(ct);
 
-        db.UserTopics.RemoveRange(db.UserTopics);
-        db.Topics.RemoveRange(db.Topics);
-        await db.SaveChangesAsync(ct);
+        await db.UserTopics.ExecuteDeleteAsync(ct);
+        await db.Topics.ExecuteDeleteAsync(ct);
 
         logger.LogWarning(
             "YKS müfredat sıfırlandı (ResetCatalog): {Ut} kullanıcı-konu ve {T} katalog konusu silindi.",
             utCount,
             tCount);
 
-        foreach (var (cat, subj, name) in CurriculumItems)
-            db.Topics.Add(new Topic { Category = cat, Subject = subj, Name = name });
+        var items = GetNormalizedUniqueItems();
+        var previousAutoDetect = db.ChangeTracker.AutoDetectChangesEnabled;
+        db.ChangeTracker.AutoDetectChangesEnabled = false;
+        try
+        {
+            await db.Topics.AddRangeAsync(items.Select(static x => new Topic
+            {
+                Category = x.Category,
+                Subject = x.Subject,
+                Name = x.Name
+            }), ct);
+            await db.SaveChangesAsync(ct);
+        }
+        finally
+        {
+            db.ChangeTracker.AutoDetectChangesEnabled = previousAutoDetect;
+        }
 
-        await db.SaveChangesAsync(ct);
-        logger.LogInformation("YKS müfredat: {Count} konu baştan yüklendi.", CurriculumItems.Length);
+        logger.LogInformation("YKS müfredat: {Count} konu baştan yüklendi.", items.Count);
     }
 
     private static async Task MergeEnsureAsync(AppDbContext db, ILogger logger, CancellationToken ct)
@@ -46,6 +59,7 @@ public static class YksCurriculumSeed
         var existingKeys = new HashSet<string>(
             StringComparer.Ordinal);
         foreach (var row in await db.Topics
+                     .AsNoTracking()
                      .Select(t => new { t.Category, t.Subject, t.Name })
                      .ToListAsync(ct))
         {
@@ -53,19 +67,21 @@ public static class YksCurriculumSeed
         }
 
         var added = 0;
-        foreach (var (cat, subj, name) in CurriculumItems)
+        var toAdd = new List<Topic>();
+        foreach (var (cat, subj, name) in GetNormalizedUniqueItems())
         {
             var key = Key(cat, subj, name);
             if (existingKeys.Contains(key))
                 continue;
 
-            db.Topics.Add(new Topic { Category = cat, Subject = subj, Name = name });
+            toAdd.Add(new Topic { Category = cat, Subject = subj, Name = name });
             existingKeys.Add(key);
             added++;
         }
 
         if (added > 0)
         {
+            await db.Topics.AddRangeAsync(toAdd, ct);
             await db.SaveChangesAsync(ct);
             logger.LogInformation("YKS müfredat: {Count} yeni konu eklendi.", added);
         }
@@ -77,6 +93,27 @@ public static class YksCurriculumSeed
 
     private static string Key(string cat, string subj, string name) =>
         $"{cat}\u001f{subj}\u001f{name}";
+
+    private static IReadOnlyList<(string Category, string Subject, string Name)> GetNormalizedUniqueItems()
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var normalized = new List<(string Category, string Subject, string Name)>(CurriculumItems.Length);
+        foreach (var (cat, subj, name) in CurriculumItems)
+        {
+            var c = cat.Trim();
+            var s = subj.Trim();
+            var n = name.Trim();
+            if (c.Length == 0 || s.Length == 0 || n.Length == 0)
+                continue;
+
+            var key = Key(c, s, n);
+            if (!seen.Add(key))
+                continue;
+
+            normalized.Add((c, s, n));
+        }
+        return normalized;
+    }
 
     private static readonly (string Category, string Subject, string Name)[] CurriculumItems =
     [

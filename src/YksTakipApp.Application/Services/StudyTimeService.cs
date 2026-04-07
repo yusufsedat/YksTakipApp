@@ -15,14 +15,31 @@ namespace YksTakipApp.Application.Services
         }
 
         public async Task AddStudyTimeAsync(int userId, int minutes, DateTime date, int? topicId)
+            => await CreateOrAccumulateStudyTimeAsync(userId, minutes, date, topicId);
+
+        public async Task<StudyTime> CreateOrAccumulateStudyTimeAsync(int userId, int minutes, DateTime date, int? topicId)
         {
             var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            var day = utcDate.Date;
 
             if (topicId.HasValue)
             {
                 var inList = await _db.UserTopics.AnyAsync(ut => ut.UserId == userId && ut.TopicId == topicId.Value);
                 if (!inList)
                     throw new InvalidOperationException("Seçilen konu çalışma listenizde yok. Önce Konular’dan ekleyin.");
+            }
+
+            var existing = await _db.StudyTimes.FirstOrDefaultAsync(s =>
+                s.UserId == userId
+                && s.TopicId == topicId
+                && s.Date >= day
+                && s.Date < day.AddDays(1));
+
+            if (existing is not null)
+            {
+                existing.DurationMinutes += minutes;
+                await _db.SaveChangesAsync();
+                return existing;
             }
 
             var studyTime = new StudyTime
@@ -35,6 +52,7 @@ namespace YksTakipApp.Application.Services
 
             _db.StudyTimes.Add(studyTime);
             await _db.SaveChangesAsync();
+            return studyTime;
         }
 
         public async Task<IEnumerable<StudyTime>> GetStudyTimesAsync(int userId)

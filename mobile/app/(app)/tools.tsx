@@ -61,7 +61,7 @@ export default function ToolsScreen() {
         toolHint: { marginTop: 6, fontSize: 13, color: colors.textMuted, lineHeight: 18 },
         footerHint: { marginTop: 18, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
       }),
-    [colors]
+    [colors, scale, vScale]
   );
 
   const scrollContent = useMemo(

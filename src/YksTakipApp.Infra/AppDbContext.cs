@@ -32,6 +32,8 @@ namespace YksTakipApp.Infra
         e.Property(x => x.Role)
             .HasMaxLength(20)
             .IsRequired();
+        e.Property(x => x.RefreshToken)
+            .HasMaxLength(512);
 
         // Unique Email
         e.HasIndex(x => x.Email).IsUnique();
@@ -173,6 +175,7 @@ namespace YksTakipApp.Infra
 
         e.HasIndex(x => x.UserId);
         e.HasIndex(x => x.CreatedAt);
+        e.HasIndex(x => new { x.UserId, x.IsDeleted });
     });
         }
     }

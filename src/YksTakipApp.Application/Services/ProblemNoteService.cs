@@ -19,7 +19,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task<IReadOnlyList<ProblemNote>> ListAsync(int userId)
         {
-            var items = (await _repository.FindAsync(x => x.UserId == userId)).ToList();
+            var items = (await _repository.FindAsync(x => x.UserId == userId && !x.IsDeleted)).ToList();
             items.Sort(static (a, b) =>
             {
                 var c = a.SolutionLearned.CompareTo(b.SolutionLearned);
@@ -48,7 +48,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task UpdateAsync(int userId, int id, IReadOnlyList<string> tags, bool solutionLearned, string? imageBase64)
         {
-            var existing = (await _repository.FindAsync(x => x.Id == id && x.UserId == userId)).FirstOrDefault();
+            var existing = (await _repository.FindAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted)).FirstOrDefault();
             if (existing is null)
                 throw new InvalidOperationException("Not bulunamadı.");
 
@@ -69,12 +69,13 @@ namespace YksTakipApp.Application.Services
 
         public async Task DeleteAsync(int userId, int id)
         {
-            var existing = (await _repository.FindAsync(x => x.Id == id && x.UserId == userId)).FirstOrDefault();
+            var existing = (await _repository.FindAsync(x => x.Id == id && x.UserId == userId && !x.IsDeleted)).FirstOrDefault();
             if (existing is null)
                 throw new InvalidOperationException("Not bulunamadı.");
 
             await _imageStorage.DeleteAsync(existing.ImagePublicId);
-            _repository.Remove(existing);
+            existing.IsDeleted = true;
+            _repository.Update(existing);
             await _repository.SaveChangesAsync();
         }
 

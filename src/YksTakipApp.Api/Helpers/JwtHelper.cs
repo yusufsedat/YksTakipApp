@@ -9,11 +9,12 @@ namespace YksTakipApp.Api.Helpers
 {
     public static class JwtHelper
     {
-        public static string GenerateToken(User user, IConfiguration config)
+        public static string GenerateToken(User user, IConfiguration config, TimeSpan? accessTokenLifetime = null)
         {
             var jwtSettings = config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var lifetime = accessTokenLifetime ?? TimeSpan.FromHours(1);
 
             // Hem "sub" hem ClaimTypes.NameIdentifier
             var role = string.IsNullOrWhiteSpace(user.Role) ? "User" : user.Role;
@@ -30,7 +31,7 @@ namespace YksTakipApp.Api.Helpers
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpireMinutes"])),
+                expires: DateTime.UtcNow.Add(lifetime),
                 signingCredentials: creds
             );
 

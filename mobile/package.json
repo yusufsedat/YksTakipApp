@@ -7,12 +7,16 @@
     "start:8082": "expo start --port 8082",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "eas:init": "eas init",
+    "eas:build:android": "eas build -p android --profile production",
+    "eas:build:android:apk": "eas build -p android --profile preview"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
+    "axios": "^1.14.0",
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
@@ -31,6 +35,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "eas-cli": "^16.28.0",
     "typescript": "~5.9.2"
   },
   "private": true

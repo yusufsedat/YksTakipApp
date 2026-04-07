@@ -8,5 +8,7 @@ namespace YksTakipApp.Core.Interfaces
         Task<User> RegisterAsync(string name, string email, string password);
         bool VerifyPassword(string password, string hash);
         Task<User?> GetByIdAsync(int id);
+        Task UpdateRefreshTokenAsync(int userId, string? refreshToken, DateTime? refreshTokenExpiryUtc);
+        Task<User?> GetByRefreshTokenAsync(string refreshToken);
     }
 }

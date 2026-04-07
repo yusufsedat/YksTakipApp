@@ -44,5 +44,21 @@ namespace YksTakipApp.Application.Services
             var users = await _repository.FindAsync(u => u.Id == id);
             return users.FirstOrDefault();
         }
+
+        public async Task UpdateRefreshTokenAsync(int userId, string? refreshToken, DateTime? refreshTokenExpiryUtc)
+        {
+            var user = (await _repository.FindAsync(u => u.Id == userId)).FirstOrDefault();
+            if (user is null) return;
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = refreshTokenExpiryUtc;
+            _repository.Update(user);
+            await _repository.SaveChangesAsync();
+        }
+
+        public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+        {
+            var users = await _repository.FindAsync(u => u.RefreshToken == refreshToken);
+            return users.FirstOrDefault();
+        }
     }
 }

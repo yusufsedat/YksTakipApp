@@ -44,9 +44,9 @@ export const CURRICULUM_SECTION_TITLE: Record<'TYT' | 'AYT', string> = {
 };
 
 export function sortSubjectsForCategory(category: 'TYT' | 'AYT', subjects: string[]): string[] {
-  const order = category === 'TYT' ? TYT_SUBJECT_ORDER : AYT_SUBJECT_ORDER;
+  const order: readonly string[] = category === 'TYT' ? TYT_SUBJECT_ORDER : AYT_SUBJECT_ORDER;
   const idx = (s: string) => {
-    const i = order.indexOf(s as (typeof order)[number]);
+    const i = order.indexOf(s);
     return i === -1 ? 999 : i;
   };
   return [...subjects].sort((a, b) => {

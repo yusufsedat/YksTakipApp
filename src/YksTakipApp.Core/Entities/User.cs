@@ -8,6 +8,8 @@ namespace YksTakipApp.Core.Entities
         public string PasswordHash { get; set; } = null!;
         /// <summary>JWT ve yetkilendirme: "User" veya "Admin".</summary>
         public string Role { get; set; } = "User";
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiry { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation

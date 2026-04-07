@@ -1,10 +1,12 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '../src/lib/auth';
+import { checkAppVersionOnBoot } from '../src/lib/appVersionCheck';
 import { ThemeProvider, useTheme } from '../src/theme';
 
 function ThemedStack() {
@@ -18,6 +20,10 @@ function ThemedStack() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    void checkAppVersionOnBoot();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>

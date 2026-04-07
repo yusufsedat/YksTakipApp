@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Cryptography;
 using YksTakipApp.Api.DTOs;
 using YksTakipApp.Api.Helpers;
 using YksTakipApp.Core.Interfaces;
@@ -52,14 +53,46 @@ namespace YksTakipApp.Api.Endpoints
                 if (!userService.VerifyPassword(request.Password, user.PasswordHash))
                     return Results.BadRequest(new { message = "Şifre hatalı." });
 
-                var token = JwtHelper.GenerateToken(user, config);
+                var token = JwtHelper.GenerateToken(user, config, TimeSpan.FromHours(1));
+                var refreshToken = CreateRefreshToken();
+                var refreshExpiry = DateTime.UtcNow.AddDays(7);
+                await userService.UpdateRefreshTokenAsync(user.Id, refreshToken, refreshExpiry);
                 return Results.Ok(new
                 {
                     message = "Giriş başarılı!",
                     token,
+                    refreshToken,
                     user = new { user.Id, user.Name, user.Email, role = user.Role }
                 });
             }).RequireRateLimiting("login");
+
+            async Task<IResult> RefreshTokenHandler(
+                RefreshTokenRequest request,
+                IUserService userService,
+                IConfiguration config)
+            {
+                if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                    return Results.BadRequest(new { message = "Refresh token zorunludur." });
+
+                var user = await userService.GetByRefreshTokenAsync(request.RefreshToken);
+                if (user is null || user.RefreshTokenExpiry is null || user.RefreshTokenExpiry <= DateTime.UtcNow)
+                    return Results.Unauthorized();
+
+                var newAccessToken = JwtHelper.GenerateToken(user, config, TimeSpan.FromHours(1));
+                var newRefreshToken = CreateRefreshToken();
+                var newRefreshExpiry = DateTime.UtcNow.AddDays(7);
+                await userService.UpdateRefreshTokenAsync(user.Id, newRefreshToken, newRefreshExpiry);
+
+                return Results.Ok(new
+                {
+                    token = newAccessToken,
+                    refreshToken = newRefreshToken,
+                    user = new { user.Id, user.Name, user.Email, role = user.Role }
+                });
+            }
+
+            app.MapPost("/users/refresh-token", RefreshTokenHandler).RequireRateLimiting("login");
+            app.MapPost("/refresh-token", RefreshTokenHandler).RequireRateLimiting("login");
 
             // Kullanıcı profilini döndür (Authorize zorunlu)
             app.MapGet("/users/me", [Authorize] async (
@@ -100,6 +133,13 @@ namespace YksTakipApp.Api.Endpoints
 
                 return Results.Ok(profile);
             });
+        }
+
+        private static string CreateRefreshToken()
+        {
+            Span<byte> bytes = stackalloc byte[64];
+            RandomNumberGenerator.Fill(bytes);
+            return Convert.ToBase64String(bytes);
         }
     }
 }
