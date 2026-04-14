@@ -20,14 +20,14 @@ YKS öğrencilerinin çalışma sürecini uçtan uca takip etmesini sağlayan fu
 ## 📱 Ekran Görüntüleri
 
 <p align="center">
-  <img src="screenshots/ana-sayfa_yks.jpg" width="220" alt="Ana Sayfa" />
-  <img src="screenshots/konular_yks.jpg" width="220" alt="Konular" />
-  <img src="screenshots/calismalar_yks.jpg" width="220" alt="Çalışmalar" />
-  <img src="screenshots/denemeler_yks.jpg" width="220" alt="Denemeler" />
+  <img src="screenshots/ana-sayfa_yks.jpg" width="200" alt="Ana Sayfa" />
+  <img src="screenshots/konular_yks.jpg" width="200" alt="Konular" />
+  <img src="screenshots/calismalar_yks.jpg" width="200" alt="Çalışmalar" />
+  <img src="screenshots/denemeler_yks.jpg" width="200" alt="Denemeler" />
   <br><br>
-  <img src="screenshots/program_yks.jpg" width="220" alt="Program" />
-  <img src="screenshots/stats_yks.jpg" width="220" alt="İstatistikler" />
-  <img src="screenshots/araclar_yks.jpg" width="220" alt="Araçlar" />
-  <img src="screenshots/notebook_yks.jpg" width="220" alt="Notebook" />
+  <img src="screenshots/program_yks.jpg" width="200" alt="Program" />
+  <img src="screenshots/stats_yks.jpg" width="200" alt="İstatistikler" />
+  <img src="screenshots/araclar_yks.jpg" width="200" alt="Araçlar" />
+  <img src="screenshots/notebook_yks.jpg" width="200" alt="Notebook" />
 </p>
 
