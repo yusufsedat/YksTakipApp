@@ -17,6 +17,24 @@ YKS öğrencilerinin çalışma sürecini uçtan uca takip etmesini sağlayan fu
 - **Mobile:** React Native (Expo), TypeScript, Expo Router
 - **CI/CD:** GitHub Actions (Build/Test/Code Quality), Railway (Deploy)
 
+## 📄 Lisans
+Bu proje [MIT](LICENSE) lisansı ile paylaşılmaktadır.
+
+## 🚀 Hızlı Başlangıç
+### Backend
+```bash
+dotnet restore
+dotnet build
+dotnet run --project src/YksTakipApp.Api
+```
+### Mobile
+```bash
+cd mobile
+npm install
+npm run start
+```
+`mobile/.env.example` dosyasını `mobile/.env` olarak kopyalayıp `EXPO_PUBLIC_API_URL` ayarını geliştirme ortamına göre güncelleyebilirsiniz.
+
 ## 📱 Ekran Görüntüleri
 
 <p align="center">
