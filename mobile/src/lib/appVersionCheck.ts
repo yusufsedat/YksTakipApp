@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 import { Alert, Linking, Platform } from 'react-native';
 
 import { apiGet } from './api';
@@ -11,6 +12,14 @@ type VersionConfigResponse = {
 };
 
 let checkedOnce = false;
+
+function getCurrentAppVersion(): string {
+  // Standalone build'de gerçek sürümü öncelikle native taraftan al.
+  const nativeVersion = (Application.nativeApplicationVersion ?? '').trim();
+  if (nativeVersion) return nativeVersion;
+  // Expo Go / dev senaryosu fallback.
+  return (Constants.expoConfig?.version ?? '0.0.0').trim();
+}
 
 function normalizeSemver(v: string): [number, number, number] {
   const cleaned = v.trim().replace(/^v/i, '');
@@ -33,8 +42,8 @@ function compareSemver(a: string, b: string): number {
 }
 
 async function openStore(storeUrl: string): Promise<void> {
-  const androidMarket = 'market://details?id=com.yusufsedat.sinavkilit';
-  const target = Platform.OS === 'android' ? androidMarket : storeUrl;
+  const androidFallback = 'market://details?id=com.sinavkilit.app';
+  const target = Platform.OS === 'android' ? (storeUrl || androidFallback) : storeUrl;
   const fallback = storeUrl;
   try {
     const ok = await Linking.canOpenURL(target);
@@ -50,14 +59,14 @@ async function openStore(storeUrl: string): Promise<void> {
 
 export async function checkAppVersionOnBoot(): Promise<void> {
   if (checkedOnce) return;
-  checkedOnce = true;
 
   if (Platform.OS !== 'android' && Platform.OS !== 'ios') return;
 
   try {
-    const currentVersion = (Constants.expoConfig?.version ?? '0.0.0').trim();
+    const currentVersion = getCurrentAppVersion();
     const platform = Platform.OS as 'android' | 'ios';
     const cfg = await apiGet<VersionConfigResponse>(`/api/app-config/check-version?platform=${platform}`);
+    checkedOnce = true;
 
     const forceCmp = compareSemver(currentVersion, cfg.minimumVersion);
     if (forceCmp < 0) {
@@ -84,7 +93,10 @@ export async function checkAppVersionOnBoot(): Promise<void> {
         { cancelable: true }
       );
     }
-  } catch {
+  } catch (e) {
+    if (__DEV__) {
+      console.warn('[version-check] failed', e);
+    }
     // Ağ/API hatası: uygulama akışını engelleme
   }
 }

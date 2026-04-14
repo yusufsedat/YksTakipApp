@@ -3,7 +3,7 @@
     "name": "Sınav Kilit",
     "slug": "ykstakip-mobile",
     "scheme": "ykstakip",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -30,7 +30,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.sinavkilit.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]

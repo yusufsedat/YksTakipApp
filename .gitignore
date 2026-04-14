@@ -67,6 +67,9 @@ appsettings.*.json
 publish/
 *.zip
 *.tar.gz
+.build-out-api*/
+.build-out-*/
+*.runtimeconfig.dev.json
 
 # Environment variables
 .env
