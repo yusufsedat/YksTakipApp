@@ -40,7 +40,11 @@ namespace YksTakipApp.Api.Endpoints
                     req.ErrorReasons, details);
 
                 return Results.Ok(new { message = "Deneme sonucu eklendi." });
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Exams")
+            .WithSummary("Deneme sonucu ekle")
+            .WithDescription("Giriş yapan kullanıcı için TYT/AYT/branş deneme sonucu ve ders detaylarını kaydeder.");
 
             app.MapGet("/exam/list", [Authorize] async (
                 IExamService service, HttpContext ctx,
@@ -93,7 +97,10 @@ namespace YksTakipApp.Api.Endpoints
                 }).ToList();
 
                 return Results.Ok(new { items, meta = new { page, pageSize, total } });
-            });
+            })
+            .WithTags("Exams")
+            .WithSummary("Deneme sonuçlarını listele")
+            .WithDescription("Kullanıcının deneme geçmişini filtreleme, sıralama ve sayfalama ile döndürür.");
 
             app.MapDelete("/exam/delete/{id}", [Authorize] async (int id, IExamService service, HttpContext ctx) =>
             {
@@ -103,7 +110,10 @@ namespace YksTakipApp.Api.Endpoints
 
                 await service.DeleteExamAsync(userId.Value, id);
                 return Results.Ok(new { message = "Deneme sonucu silindi." });
-            });
+            })
+            .WithTags("Exams")
+            .WithSummary("Deneme sonucu sil")
+            .WithDescription("Belirtilen deneme kaydını giriş yapan kullanıcı adına siler.");
         }
     }
 }

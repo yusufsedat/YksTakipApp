@@ -270,16 +270,20 @@ var app = builder.Build();
 // Production migration: Railway Pre-Deploy → ./railway-migrate.sh (Docker imajındaki efbundle).
 // Startup'ta MigrateAsync yok; Pre-Deploy başarısızsa deploy tamamlanmaz.
 
+// Swagger herkese açık (development + production)
+app.UseSwagger();
+app.UseSwaggerUI();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-
     // Sadece geliştirme ortamında DB bağlantı testi endpoint'i
     app.MapGet("/dbtest", async (AppDbContext db) =>
     {
         return await db.Database.CanConnectAsync() ? "✅ Connected" : "❌ Not Connected";
-    });
+    })
+    .WithTags("System")
+    .WithSummary("Geliştirme DB bağlantı testi")
+    .WithDescription("Sadece development ortamında veritabanı bağlantısını hızlıca doğrulamak için kullanılır.");
 }
 
 // 🔒 Security Headers (Production'da)
@@ -321,7 +325,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // 📚 Endpoints
-app.MapGet("/", () => "✅ YksTakipApp API running!");
+app.MapGet("/", () => "✅ YksTakipApp API running!")
+    .WithTags("System")
+    .WithSummary("API durum endpointi")
+    .WithDescription("Servisin ayakta olduğunu doğrulayan basit karşılama endpointidir.");
 
 // Sağlık + DB bağlantısı (Railway / izleme; JWT gerekmez)
 app.MapGet("/health", async (AppDbContext db, ILoggerFactory loggerFactory) =>
@@ -344,7 +351,10 @@ app.MapGet("/health", async (AppDbContext db, ILoggerFactory loggerFactory) =>
         log.LogError(ex, "Database health check failed.");
         return Results.Json(new { status = "degraded", database = "error" }, statusCode: 503);
     }
-});
+})
+.WithTags("System")
+.WithSummary("Sağlık kontrolü")
+.WithDescription("API ve veritabanı erişilebilirliğini kontrol eder; izleme ve platform health check için kullanılır.");
 
 app.MapUserEndpoints();
 app.MapTopicEndpoints();

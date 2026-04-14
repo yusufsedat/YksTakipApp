@@ -18,6 +18,9 @@ public static class AppConfigEndpoints
             }
 
             return Results.Ok(item);
-        });
+        })
+        .WithTags("AppConfig")
+        .WithSummary("Uygulama sürüm kontrolü")
+        .WithDescription("Belirtilen platform (ios/android) için minimum sürüm ve güncelleme gereksinimi bilgisini döndürür.");
     }
 }

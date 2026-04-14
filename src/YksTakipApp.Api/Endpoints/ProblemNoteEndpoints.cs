@@ -23,7 +23,10 @@ namespace YksTakipApp.Api.Endpoints
                 var list = await service.ListAsync(userId.Value);
                 var dtos = list.Select(ToDto).ToList();
                 return Results.Ok(new { items = dtos });
-            });
+            })
+            .WithTags("ProblemNotes")
+            .WithSummary("Soru notlarını listele")
+            .WithDescription("Kullanıcının kaydettiği soru notlarını, etiket ve çözüm bilgileri ile listeler.");
 
             app.MapPost("/problem-notes/add", [Authorize] async (
                 ProblemNoteCreateRequest request,
@@ -42,7 +45,11 @@ namespace YksTakipApp.Api.Endpoints
                 var tags = request.Tags ?? new List<string>();
                 var created = await service.AddAsync(userId.Value, request.ImageBase64, tags, request.SolutionLearned);
                 return Results.Ok(ToDto(created));
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("ProblemNotes")
+            .WithSummary("Soru notu ekle")
+            .WithDescription("Yeni bir soru notu oluşturur; görsel (base64/url), etiket ve öğrenilen çözüm bilgisini kaydeder.");
 
             app.MapPut("/problem-notes/{id:int}", [Authorize] async (
                 int id,
@@ -69,7 +76,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("ProblemNotes")
+            .WithSummary("Soru notu güncelle")
+            .WithDescription("Belirtilen soru notunun etiket, çözüm notu ve görsel bilgisini günceller.");
 
             app.MapDelete("/problem-notes/{id:int}", [Authorize] async (int id, IProblemNoteService service, HttpContext ctx) =>
             {
@@ -86,7 +97,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("ProblemNotes")
+            .WithSummary("Soru notu sil")
+            .WithDescription("Belirtilen soru notunu kullanıcının kayıtlarından kaldırır.");
         }
 
         private static ProblemNoteDto ToDto(ProblemNote e) => new()

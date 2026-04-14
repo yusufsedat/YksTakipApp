@@ -35,7 +35,11 @@ namespace YksTakipApp.Api.Endpoints
                     return Results.BadRequest(new { message = ex.Message });
                 }
                 return Results.Ok(new { message = "Çalışma süresi kaydedildi." });
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("StudyTime")
+            .WithSummary("Çalışma süresi ekle")
+            .WithDescription("Kullanıcının belirttiği tarih ve konu için çalışma süresi kaydı oluşturur veya mevcut kaydı biriktirir.");
 
             // Kronometre bitim kaydı için optimize create endpoint (aynı gün+konu kayıtlarını birleştirir)
             app.MapPost("/studytime/create", [Authorize] async (
@@ -72,7 +76,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("StudyTime")
+            .WithSummary("Kronometre çalışma kaydı oluştur")
+            .WithDescription("Kronometre akışı için optimize edilmiş çalışma kaydı endpointidir; aynı gün/konu kayıtlarını birleştirir.");
 
             // Mobil uyum endpoint: POST /api/studytimes (UserId, DurationMinutes, Subject, Date)
             app.MapPost("/api/studytimes", [Authorize] async (
@@ -137,7 +145,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("StudyTime")
+            .WithSummary("Mobil uyumlu çalışma kaydı")
+            .WithDescription("Eski mobil istemci uyumluluğu için çalışma süresi ekler. Subject bilgisine göre kullanıcının konu eşlemesini yapar.");
 
             // Kullanıcının çalışma sürelerini listeleme
             app.MapGet("/studytime/list", [Authorize] async (IStudyTimeService service, HttpContext ctx, int page = 1, int pageSize = 20) =>
@@ -163,7 +175,10 @@ namespace YksTakipApp.Api.Endpoints
                     })
                     .ToList();
                 return Results.Ok(new { items = pageItems, meta = new { page, pageSize, total } });
-            });
+            })
+            .WithTags("StudyTime")
+            .WithSummary("Çalışma sürelerini listele")
+            .WithDescription("Giriş yapan kullanıcının çalışma sürelerini en yeniden eskiye sayfalı olarak listeler.");
         }
     }
 }

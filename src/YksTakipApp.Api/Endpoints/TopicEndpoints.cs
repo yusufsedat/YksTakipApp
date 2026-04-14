@@ -24,7 +24,10 @@ namespace YksTakipApp.Api.Endpoints
                 return Results.Ok(new { message = "Konu eklendi." });
             })
                 .RequireAuthorization("AdminOnly")
-                .RequireRateLimiting("writes");
+                .RequireRateLimiting("writes")
+                .WithTags("Topics")
+                .WithSummary("Global konu ekle (Admin)")
+                .WithDescription("Sadece Admin rolündeki kullanıcılar global konu kataloğuna yeni konu ekleyebilir.");
 
             // Tüm konuları listeleme
             app.MapGet("/topics", async (ITopicService service, int page = 1, int pageSize = 20, string? sort = null) =>
@@ -50,7 +53,10 @@ namespace YksTakipApp.Api.Endpoints
 
                 var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 return Results.Ok(new { items, meta = new { page, pageSize, total } });
-            });
+            })
+            .WithTags("Topics")
+            .WithSummary("Konu kataloğunu listele")
+            .WithDescription("Sistemdeki tüm konuları sayfalı olarak listeler. Opsiyonel sıralama destekler.");
 
             // Kullanıcının konu durumlarını al
             app.MapGet("/user/topics", [Authorize] async (ITopicService service, HttpContext ctx) =>
@@ -61,7 +67,10 @@ namespace YksTakipApp.Api.Endpoints
 
                 var data = await service.GetUserTopicsAsync(userId.Value);
                 return Results.Ok(data);
-            });
+            })
+            .WithTags("Topics")
+            .WithSummary("Kullanıcının konularını getir")
+            .WithDescription("Giriş yapan kullanıcının konu listesini ve ilerleme durumlarını döndürür.");
 
             // Kullanıcıya konu ekleme
             app.MapPost("/user/topics/add", [Authorize] async (
@@ -87,7 +96,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Topics")
+            .WithSummary("Kullanıcıya konu ekle")
+            .WithDescription("Global katalogdaki bir konuyu giriş yapan kullanıcının konu listesine ekler.");
 
             // Kullanıcının konu durumunu güncelle
             app.MapPost("/user/topics/update", [Authorize] async (
@@ -113,7 +126,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Topics")
+            .WithSummary("Konu durumunu güncelle")
+            .WithDescription("Kullanıcının konu durumu bilgisini (ör. başlamadı/devam ediyor/bitti) günceller.");
 
             // Kullanıcı listesinden konu kaldır (UserTopic silinir; global Topic kalır)
             app.MapDelete("/user/topics/{topicId:int}", [Authorize] async (
@@ -134,7 +151,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Topics")
+            .WithSummary("Kullanıcı listesinden konu kaldır")
+            .WithDescription("Belirtilen konuyu sadece kullanıcının kişisel listesinden kaldırır; global katalogdan silmez.");
         }
     }
 }

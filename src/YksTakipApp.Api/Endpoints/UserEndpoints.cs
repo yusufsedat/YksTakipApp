@@ -32,7 +32,10 @@ namespace YksTakipApp.Api.Endpoints
                     message = "Kayıt başarılı!",
                     user = new { user.Id, user.Name, user.Email, role = user.Role }
                 });
-            });
+            })
+            .WithTags("Users")
+            .WithSummary("Yeni kullanıcı kaydı")
+            .WithDescription("Yeni bir kullanıcı hesabı oluşturur. Email benzersiz olmalıdır.");
 
             // Kullanıcı giriş
             app.MapPost("/users/login", async (
@@ -64,7 +67,11 @@ namespace YksTakipApp.Api.Endpoints
                     refreshToken,
                     user = new { user.Id, user.Name, user.Email, role = user.Role }
                 });
-            }).RequireRateLimiting("login");
+            })
+            .RequireRateLimiting("login")
+            .WithTags("Users")
+            .WithSummary("Kullanıcı girişi")
+            .WithDescription("Email ve şifre ile giriş yapar, access token ve refresh token döner.");
 
             async Task<IResult> RefreshTokenHandler(
                 RefreshTokenRequest request,
@@ -91,8 +98,17 @@ namespace YksTakipApp.Api.Endpoints
                 });
             }
 
-            app.MapPost("/users/refresh-token", RefreshTokenHandler).RequireRateLimiting("login");
-            app.MapPost("/refresh-token", RefreshTokenHandler).RequireRateLimiting("login");
+            app.MapPost("/users/refresh-token", RefreshTokenHandler)
+                .RequireRateLimiting("login")
+                .WithTags("Users")
+                .WithSummary("Access token yenile")
+                .WithDescription("Geçerli bir refresh token ile yeni access token ve refresh token üretir.");
+
+            app.MapPost("/refresh-token", RefreshTokenHandler)
+                .RequireRateLimiting("login")
+                .WithTags("Users")
+                .WithSummary("Access token yenile (legacy)")
+                .WithDescription("Geriye dönük uyumluluk için refresh token endpointi. /users/refresh-token ile aynı işlemi yapar.");
 
             // Kullanıcı profilini döndür (Authorize zorunlu)
             app.MapGet("/users/me", [Authorize] async (
@@ -132,7 +148,10 @@ namespace YksTakipApp.Api.Endpoints
                 };
 
                 return Results.Ok(profile);
-            });
+            })
+            .WithTags("Users")
+            .WithSummary("Profil bilgisi")
+            .WithDescription("Giriş yapan kullanıcının profil, konu ve özet istatistik bilgilerini döndürür.");
         }
 
         private static string CreateRefreshToken()

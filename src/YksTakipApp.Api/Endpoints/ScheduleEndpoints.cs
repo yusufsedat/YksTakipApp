@@ -20,7 +20,10 @@ namespace YksTakipApp.Api.Endpoints
                 var list = await service.GetListAsync(userId.Value);
                 var dtos = list.Select(ToDto).ToList();
                 return Results.Ok(new { items = dtos });
-            });
+            })
+            .WithTags("Schedule")
+            .WithSummary("Program listesini getir")
+            .WithDescription("Giriş yapan kullanıcının haftalık/aylık program kayıtlarını listeler.");
 
             app.MapPost("/schedule/add", [Authorize] async (
                 ScheduleCreateRequest request,
@@ -53,7 +56,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Schedule")
+            .WithSummary("Programa kayıt ekle")
+            .WithDescription("Kullanıcı programına yeni bir zaman aralığı ve isteğe bağlı konu bağlantısı ekler.");
 
             app.MapPut("/schedule/{id:int}", [Authorize] async (
                 int id,
@@ -88,7 +95,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Schedule")
+            .WithSummary("Program kaydını güncelle")
+            .WithDescription("Belirtilen program kaydının zaman, tekrar tipi, başlık ve konu bilgisini günceller.");
 
             app.MapDelete("/schedule/{id:int}", [Authorize] async (int id, IScheduleService service, HttpContext ctx) =>
             {
@@ -105,7 +116,11 @@ namespace YksTakipApp.Api.Endpoints
                 {
                     return Results.BadRequest(new { message = ex.Message });
                 }
-            }).RequireRateLimiting("writes");
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Schedule")
+            .WithSummary("Program kaydını sil")
+            .WithDescription("Belirtilen program kaydını giriş yapan kullanıcının takviminden kaldırır.");
         }
 
         private static ScheduleEntryDto ToDto(ScheduleEntry e) => new()
