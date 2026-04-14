@@ -18,12 +18,16 @@ YKS öğrencilerinin çalışma sürecini uçtan uca takip etmesini sağlayan fu
 - **CI/CD:** GitHub Actions (Build/Test/Code Quality), Railway (Deploy)
 
 ## 📱 Ekran Görüntüleri
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115813_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115820_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115825_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115829_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115835_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115841_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115850_Snav Kilit.jpg)
-![YksTakipApp Mobil](screenshots/Screenshot_20260414_115856_Snav Kilit.jpg)
+
+<p align="center">
+  <img src="screenshots/ana-sayfa_yks.jpg" width="220" alt="Ana Sayfa" />
+  <img src="screenshots/konular_yks.jpg" width="220" alt="Konular" />
+  <img src="screenshots/calismalar_yks.jpg" width="220" alt="Çalışmalar" />
+  <img src="screenshots/denemeler_yks.jpg" width="220" alt="Denemeler" />
+  <br><br>
+  <img src="screenshots/program_yks.jpg" width="220" alt="Program" />
+  <img src="screenshots/stats_yks.jpg" width="220" alt="İstatistikler" />
+  <img src="screenshots/araclar_yks.jpg" width="220" alt="Araçlar" />
+  <img src="screenshots/notebook_yks.jpg" width="220" alt="Notebook" />
+</p>
 
