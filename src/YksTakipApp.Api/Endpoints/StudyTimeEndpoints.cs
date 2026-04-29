@@ -82,6 +82,59 @@ namespace YksTakipApp.Api.Endpoints
             .WithSummary("Kronometre çalışma kaydı oluştur")
             .WithDescription("Kronometre akışı için optimize edilmiş çalışma kaydı endpointidir; aynı gün/konu kayıtlarını birleştirir.");
 
+            app.MapPost("/studytime/bulk-create", [Authorize] async (
+                StudyTimeBulkCreateRequest request,
+                IValidator<StudyTimeRequest> validator,
+                IStudyTimeService service,
+                HttpContext ctx) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null)
+                    return Results.Unauthorized();
+
+                if (request.Items is null || request.Items.Count == 0)
+                    return Results.BadRequest(new { message = "En az bir kayıt gönderilmelidir." });
+
+                if (request.Items.Count > 200)
+                    return Results.BadRequest(new { message = "Tek seferde en fazla 200 kayıt gönderilebilir." });
+
+                var savedCount = 0;
+                var failedIndexes = new List<int>();
+
+                for (var i = 0; i < request.Items.Count; i++)
+                {
+                    var item = request.Items[i];
+                    var validation = await validator.ValidateAsync(item);
+                    if (!validation.IsValid)
+                    {
+                        failedIndexes.Add(i);
+                        continue;
+                    }
+
+                    try
+                    {
+                        await service.CreateOrAccumulateStudyTimeAsync(userId.Value, item.DurationMinutes, item.Date, item.TopicId);
+                        savedCount++;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        failedIndexes.Add(i);
+                    }
+                }
+
+                return Results.Ok(new
+                {
+                    message = "Toplu çalışma kayıtları işlendi.",
+                    savedCount,
+                    failedCount = failedIndexes.Count,
+                    failedIndexes
+                });
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("StudyTime")
+            .WithSummary("Toplu kronometre çalışma kaydı oluştur")
+            .WithDescription("Çevrimdışı kuyrukta biriken çalışma kayıtlarını tek istekte gönderir ve aynı gün/konu kayıtlarını birleştirir.");
+
             // Mobil uyum endpoint: POST /api/studytimes (UserId, DurationMinutes, Subject, Date)
             app.MapPost("/api/studytimes", [Authorize] async (
                 StudyTimeCreateApiRequest request,

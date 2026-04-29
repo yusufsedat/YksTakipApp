@@ -23,6 +23,11 @@ import {
   stopStopwatchForegroundService,
   syncStopwatchForegroundNotification,
 } from '../../src/lib/stopwatchForegroundService';
+import {
+  enqueuePendingStudyTime,
+  flushPendingStudyTimes,
+  isLikelyNetworkError,
+} from '../../src/lib/pendingStudyTimes';
 import { readStopwatchState, writeStopwatchState } from '../../src/lib/stopwatchState';
 import type { Paginated, StudyTimeDto, TopicDto, UserTopicDto } from '../../src/types/api';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -261,6 +266,7 @@ export default function StudyScreen() {
     let cancelled = false;
     void (async () => {
       const saved = await readStopwatchState();
+      await flushPendingStudyTimes();
       if (cancelled) return;
       setIsRunning(saved.isRunning);
       setElapsedMs(saved.elapsedMs);
@@ -291,6 +297,7 @@ export default function StudyScreen() {
       appStateRef.current = nextState;
       if (prev.match(/inactive|background/) && nextState === 'active') {
         void (async () => {
+          await flushPendingStudyTimes();
           const saved = await readStopwatchState();
           setIsRunning(saved.isRunning);
           setElapsedMs(saved.elapsedMs);
@@ -511,7 +518,17 @@ export default function StudyScreen() {
       await fetchPage(1, false);
       Alert.alert('Başarılı', 'Çalışmalarım bölümüne eklendi!');
     } catch (e) {
-      Alert.alert('Kayıt Hatası', e instanceof Error ? e.message : 'Süre kaydedilemedi.');
+      if (isLikelyNetworkError(e)) {
+        await enqueuePendingStudyTime({
+          durationMinutes,
+          date: new Date().toISOString(),
+          topicId: selectedTopicId,
+        });
+        resetTimer();
+        Alert.alert('İnternet yok', 'Çalışma süresi güvenli şekilde kaydedildi. Bağlantı gelince otomatik gönderilecek.');
+      } else {
+        Alert.alert('Kayıt Hatası', e instanceof Error ? e.message : 'Süre kaydedilemedi.');
+      }
     } finally {
       setTimerSaving(false);
     }

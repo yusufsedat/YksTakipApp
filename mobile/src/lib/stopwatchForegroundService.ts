@@ -1,8 +1,7 @@
 import notifee, { AndroidImportance, AndroidVisibility, EventType } from '@notifee/react-native';
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { getApiBaseUrl } from './config';
+import { apiPost } from './api';
+import { enqueuePendingStudyTime, isLikelyNetworkError } from './pendingStudyTimes';
 import { DEFAULT_STOPWATCH_STATE, readStopwatchState, writeStopwatchState } from './stopwatchState';
 
 const TICK_MS = 1000;
@@ -10,7 +9,6 @@ const CHANNEL_ID = 'study-stopwatch-channel';
 const NOTIFICATION_ID = 'study-stopwatch-notification';
 const ACTION_PAUSE = 'stopwatch-pause';
 const ACTION_FINISH = 'stopwatch-finish';
-const TOKEN_KEY = 'auth_token';
 
 type ServiceState = {
   startedAtMs: number | null;
@@ -175,26 +173,18 @@ async function handleActionPress(actionId: string): Promise<void> {
 
 async function saveStopwatchToBackend(finalMs: number, topicId: number | null): Promise<void> {
   if (finalMs < 1000) return;
+  const durationMinutes = Math.max(1, Math.round(finalMs / 60000));
+  const payload = {
+    durationMinutes,
+    date: new Date().toISOString(),
+    topicId,
+  };
   try {
-    const token = await SecureStore.getItemAsync(TOKEN_KEY);
-    if (!token) return;
-    const durationMinutes = Math.max(1, Math.round(finalMs / 60000));
-    await axios.post(
-      `${getApiBaseUrl()}/studytime/create`,
-      {
-        durationMinutes,
-        date: new Date().toISOString(),
-        topicId,
-      },
-      {
-        timeout: 15000,
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-  } catch {
+    await apiPost('/studytime/create', payload);
+  } catch (error) {
+    if (isLikelyNetworkError(error)) {
+      await enqueuePendingStudyTime(payload);
+    }
     // Bildirim aksiyonu sessizce calisir; hata olursa uygulama akisini bozma.
   }
 }
