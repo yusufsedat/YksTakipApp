@@ -13,8 +13,10 @@ namespace YksTakipApp.Core.Entities
         public int? DurationMinutes { get; set; }
         public int? Difficulty { get; set; } // 1-5
         public string? ErrorReasons { get; set; } // virgul-ayrimli
+        public int? TopicId { get; set; }
 
         public User User { get; set; } = null!;
+        public Topic? Topic { get; set; }
         public ICollection<ExamDetail> ExamDetails { get; set; } = new List<ExamDetail>();
     }
 }

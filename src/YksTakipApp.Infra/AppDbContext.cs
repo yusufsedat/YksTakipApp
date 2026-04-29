@@ -98,6 +98,7 @@ namespace YksTakipApp.Infra
 
         e.HasIndex(x => x.UserId);
         e.HasIndex(x => x.Date);
+        e.HasIndex(x => new { x.UserId, x.Date });
         e.HasIndex(x => x.TopicId);
     });
 
@@ -116,9 +117,16 @@ namespace YksTakipApp.Infra
         e.Property(x => x.Subject).HasMaxLength(60);
         e.Property(x => x.Date).IsRequired();
         e.Property(x => x.ErrorReasons).HasMaxLength(500);
+        e.Property(x => x.TopicId);
+
+        e.HasOne(x => x.Topic)
+         .WithMany()
+         .HasForeignKey(x => x.TopicId)
+         .OnDelete(DeleteBehavior.SetNull);
 
         e.HasIndex(x => x.UserId);
         e.HasIndex(x => new { x.UserId, x.Date });
+        e.HasIndex(x => new { x.UserId, x.TopicId });
         e.HasIndex(x => x.ExamType);
     });
 
