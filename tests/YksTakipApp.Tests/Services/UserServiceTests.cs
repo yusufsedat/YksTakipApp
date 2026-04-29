@@ -31,7 +31,7 @@ public class UserServiceTests
         };
 
         _repositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
             .ReturnsAsync(new[] { expectedUser });
 
         // Act
@@ -50,7 +50,7 @@ public class UserServiceTests
         var email = "nonexistent@example.com";
 
         _repositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<User>());
 
         // Act
@@ -137,7 +137,7 @@ public class UserServiceTests
         };
 
         _repositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
             .ReturnsAsync(new[] { expectedUser });
 
         // Act
@@ -155,7 +155,7 @@ public class UserServiceTests
         var userId = 999;
 
         _repositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<User>());
 
         // Act

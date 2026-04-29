@@ -93,7 +93,7 @@ namespace YksTakipApp.Application.Services
                     throw new InvalidOperationException("Seçilen konu listenizde yok. Önce Konular’dan ekleyin.");
             }
 
-            var existing = (await _repository.FindAsync(e => e.Id == id && e.UserId == userId)).FirstOrDefault();
+            var existing = (await _repository.FindForReadAsync(e => e.Id == id && e.UserId == userId)).FirstOrDefault();
             if (existing is null)
                 throw new InvalidOperationException("Program kaydı bulunamadı.");
 
@@ -110,7 +110,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task DeleteAsync(int userId, int id)
         {
-            var existing = (await _repository.FindAsync(e => e.Id == id && e.UserId == userId)).FirstOrDefault();
+            var existing = (await _repository.FindForReadAsync(e => e.Id == id && e.UserId == userId)).FirstOrDefault();
             if (existing is null)
                 throw new InvalidOperationException("Program kaydı bulunamadı.");
 

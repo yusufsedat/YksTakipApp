@@ -47,14 +47,14 @@ public class StatsServiceTests
         var studyMock = new Mock<IRepository<StudyTime>>();
         var topicMock = new Mock<IRepository<UserTopic>>();
         studyMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
             .ReturnsAsync(new List<StudyTime>
             {
                 new() { UserId = userId, DurationMinutes = 60, Date = DateTime.UtcNow.AddDays(-1) },
                 new() { UserId = userId, DurationMinutes = 90, Date = DateTime.UtcNow.AddDays(-2) },
             });
         topicMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(new List<UserTopic>
             {
                 new() { UserId = userId, TopicId = 1, Status = TopicStatus.Completed },
@@ -81,10 +81,10 @@ public class StatsServiceTests
         var studyMock = new Mock<IRepository<StudyTime>>();
         var topicMock = new Mock<IRepository<UserTopic>>();
         studyMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<StudyTime>());
         topicMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<UserTopic>());
 
         var service = new StatsService(studyMock.Object, topicMock.Object, db);
@@ -106,7 +106,7 @@ public class StatsServiceTests
         var studyMock = new Mock<IRepository<StudyTime>>();
         var topicMock = new Mock<IRepository<UserTopic>>();
         studyMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
             .ReturnsAsync(new List<StudyTime>
             {
                 new() { UserId = userId, DurationMinutes = 60, Date = DateTime.UtcNow.Date.AddDays(-1) },
@@ -142,7 +142,7 @@ public class StatsServiceTests
 
         var callCount = 0;
         studyMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<StudyTime, bool>>>()))
             .ReturnsAsync(() =>
             {
                 callCount++;

@@ -23,20 +23,20 @@ namespace YksTakipApp.Application.Services
         }
 
         public async Task<IEnumerable<Topic>> GetAllAsync()
-            => await _topicRepo.GetAllAsync();
+            => await _topicRepo.GetAllForReadAsync();
 
         public async Task<IEnumerable<UserTopic>> GetUserTopicsAsync(int userId)
-            => await _userTopicRepo.FindAsync(ut => ut.UserId == userId);
+            => await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId);
 
         public async Task AddUserTopicAsync(int userId, int topicId)
         {
             // Konunun var olup olmadığını kontrol et
-            var topic = (await _topicRepo.FindAsync(t => t.Id == topicId)).FirstOrDefault();
+            var topic = (await _topicRepo.FindForReadAsync(t => t.Id == topicId)).FirstOrDefault();
             if (topic == null)
                 throw new InvalidOperationException($"Topic with id {topicId} not found.");
 
             // Kullanıcının bu konuyu zaten ekleyip eklemediğini kontrol et
-            var existing = (await _userTopicRepo.FindAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
+            var existing = (await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
             if (existing != null)
                 throw new InvalidOperationException("Bu konu zaten kullanıcının listesinde mevcut.");
 
@@ -68,7 +68,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status)
         {
-            var existing = (await _userTopicRepo.FindAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
+            var existing = (await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
 
             if (existing == null)
             {
@@ -82,7 +82,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task RemoveUserTopicAsync(int userId, int topicId)
         {
-            var existing = (await _userTopicRepo.FindAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
+            var existing = (await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
             if (existing is null)
                 throw new InvalidOperationException("Bu konu listenizde yok.");
 

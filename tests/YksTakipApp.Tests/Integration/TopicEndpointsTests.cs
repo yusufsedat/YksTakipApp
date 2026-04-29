@@ -56,16 +56,15 @@ public class TopicEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task GetTopics_ReturnsTopicsList()
     {
-        // Arrange - API endpoint'i kullanarak topic ekle (test isolation için)
-        var token = await GetAuthTokenAsync();
-        _client.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-        var topic1 = new TopicCreateRequest { Name = "Topic 1", Category = "TYT" };
-        var topic2 = new TopicCreateRequest { Name = "Topic 2", Category = "AYT" };
-        
-        await _client.PostAsJsonAsync("/topics", topic1);
-        await _client.PostAsJsonAsync("/topics", topic2);
+        // Arrange - admin endpoint'ine bağımlı kalmamak için doğrudan DB'ye seed et.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Topics.AddRange(
+                new Topic { Name = "Topic 1", Category = "TYT", Subject = "Türkçe" },
+                new Topic { Name = "Topic 2", Category = "AYT", Subject = "AYT Matematik" });
+            await db.SaveChangesAsync();
+        }
 
         // Act
         _client.DefaultRequestHeaders.Authorization = null; // Topics endpoint'i public
@@ -136,19 +135,15 @@ public class TopicEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        // Önce topic oluştur (API endpoint kullanarak)
-        var topicCreateRequest = new TopicCreateRequest { Name = "Test Topic", Category = "TYT" };
-        var createResponse = await _client.PostAsJsonAsync("/topics", topicCreateRequest);
-        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Topic ID'yi almak için topics listesini çek
-        var topicsResponse = await _client.GetAsync("/topics");
-        var topicsContent = await topicsResponse.Content.ReadAsStringAsync();
-        var topicsJson = JsonDocument.Parse(topicsContent);
-        var topicId = topicsJson.RootElement.GetProperty("items")
-            .EnumerateArray()
-            .First(t => t.GetProperty("name").GetString() == "Test Topic")
-            .GetProperty("id").GetInt32();
+        int topicId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var topic = new Topic { Name = "Test Topic", Category = "TYT", Subject = "Türkçe" };
+            db.Topics.Add(topic);
+            await db.SaveChangesAsync();
+            topicId = topic.Id;
+        }
 
         // Önce konuyu kullanıcıya ekle
         var addRequest = new UserTopicAddRequest { TopicId = topicId };

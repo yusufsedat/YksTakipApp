@@ -58,7 +58,7 @@ public class TopicServiceTests
         };
 
         _topicRepositoryMock
-            .Setup(r => r.GetAllAsync())
+            .Setup(r => r.GetAllForReadAsync())
             .ReturnsAsync(expectedTopics);
 
         // Act
@@ -82,7 +82,7 @@ public class TopicServiceTests
         };
 
         _userTopicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(expectedUserTopics);
 
         // Act
@@ -103,11 +103,11 @@ public class TopicServiceTests
         var topic = new Topic { Id = topicId, Name = "Test Topic", Category = "TYT" };
 
         _topicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
             .ReturnsAsync(new[] { topic });
 
         _userTopicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<UserTopic>());
 
         UserTopic? savedUserTopic = null;
@@ -140,7 +140,7 @@ public class TopicServiceTests
         var topicId = 999;
 
         _topicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<Topic>());
 
         // Act & Assert
@@ -160,11 +160,11 @@ public class TopicServiceTests
         var existingUserTopic = new UserTopic { UserId = userId, TopicId = topicId, Status = TopicStatus.NotStarted };
 
         _topicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Topic, bool>>>()))
             .ReturnsAsync(new[] { topic });
 
         _userTopicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(new[] { existingUserTopic });
 
         // Act & Assert
@@ -189,7 +189,7 @@ public class TopicServiceTests
         };
 
         _userTopicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(new[] { existingUserTopic });
         _userTopicRepositoryMock
             .Setup(r => r.SaveChangesAsync())
@@ -213,7 +213,7 @@ public class TopicServiceTests
         var newStatus = TopicStatus.Completed;
 
         _userTopicRepositoryMock
-            .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
+            .Setup(r => r.FindForReadAsync(It.IsAny<System.Linq.Expressions.Expression<Func<UserTopic, bool>>>()))
             .ReturnsAsync(Enumerable.Empty<UserTopic>());
 
         // Act & Assert

@@ -15,7 +15,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            var users = await _repository.FindAsync(u => u.Email == email);
+            var users = await _repository.FindForReadAsync(u => u.Email == email);
             return users.FirstOrDefault();
         }
 
@@ -41,13 +41,13 @@ namespace YksTakipApp.Application.Services
         
          public async Task<User?> GetByIdAsync(int id)
         {
-            var users = await _repository.FindAsync(u => u.Id == id);
+            var users = await _repository.FindForReadAsync(u => u.Id == id);
             return users.FirstOrDefault();
         }
 
         public async Task UpdateRefreshTokenAsync(int userId, string? refreshToken, DateTime? refreshTokenExpiryUtc)
         {
-            var user = (await _repository.FindAsync(u => u.Id == userId)).FirstOrDefault();
+            var user = (await _repository.FindForReadAsync(u => u.Id == userId)).FirstOrDefault();
             if (user is null) return;
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiry = refreshTokenExpiryUtc;
@@ -57,7 +57,7 @@ namespace YksTakipApp.Application.Services
 
         public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
         {
-            var users = await _repository.FindAsync(u => u.RefreshToken == refreshToken);
+            var users = await _repository.FindForReadAsync(u => u.RefreshToken == refreshToken);
             return users.FirstOrDefault();
         }
     }

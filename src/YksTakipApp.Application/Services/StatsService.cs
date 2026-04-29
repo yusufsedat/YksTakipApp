@@ -20,8 +20,8 @@ namespace YksTakipApp.Application.Services
         public async Task<object> GetSummaryAsync(int userId)
         {
             var weekAgo = DateTime.UtcNow.AddDays(-7);
-            var studyTimes = await _studyRepo.FindAsync(s => s.UserId == userId && s.Date >= weekAgo);
-            var topics = await _topicRepo.FindAsync(t => t.UserId == userId && t.Status == TopicStatus.Completed);
+            var studyTimes = await _studyRepo.FindForReadAsync(s => s.UserId == userId && s.Date >= weekAgo);
+            var topics = await _topicRepo.FindForReadAsync(t => t.UserId == userId && t.Status == TopicStatus.Completed);
             var exams = await _db.Set<ExamResult>().AsNoTracking()
                 .Where(e => e.UserId == userId).ToListAsync();
 
@@ -41,7 +41,7 @@ namespace YksTakipApp.Application.Services
         {
             var startDate = DateTime.UtcNow.Date.AddDays(-6);
             var endDate = DateTime.UtcNow.Date;
-            var studyTimes = await _studyRepo.FindAsync(s => s.UserId == userId && s.Date >= startDate);
+            var studyTimes = await _studyRepo.FindForReadAsync(s => s.UserId == userId && s.Date >= startDate);
 
             var byDay = studyTimes
                 .GroupBy(s => s.Date.Date)
@@ -64,8 +64,8 @@ namespace YksTakipApp.Application.Services
             DateTime lastWeekStart = today.AddDays(-13);
             DateTime lastWeekEnd = thisWeekStart;
 
-            var thisWeek = await _studyRepo.FindAsync(s => s.UserId == userId && s.Date >= thisWeekStart && s.Date <= today);
-            var lastWeek = await _studyRepo.FindAsync(s => s.UserId == userId && s.Date >= lastWeekStart && s.Date < lastWeekEnd);
+            var thisWeek = await _studyRepo.FindForReadAsync(s => s.UserId == userId && s.Date >= thisWeekStart && s.Date <= today);
+            var lastWeek = await _studyRepo.FindForReadAsync(s => s.UserId == userId && s.Date >= lastWeekStart && s.Date < lastWeekEnd);
 
             int thisWeekTotal = thisWeek.Sum(s => s.DurationMinutes);
             int lastWeekTotal = lastWeek.Sum(s => s.DurationMinutes);

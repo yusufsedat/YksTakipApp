@@ -24,10 +24,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<YksTakipApp.Api
                 services.Remove(descriptor);
             }
 
-            // DbContextPool'u kaldır (eğer varsa)
+            // Sadece AppDbContext pool'unu kaldır; framework'ün routing pool servislerine dokunma.
             var poolDescriptors = services.Where(
-                d => d.ServiceType.IsGenericType && 
-                     d.ServiceType.GetGenericTypeDefinition() == typeof(Microsoft.Extensions.ObjectPool.ObjectPool<>))
+                d => d.ServiceType == typeof(Microsoft.Extensions.ObjectPool.ObjectPool<AppDbContext>))
                 .ToList();
             
             foreach (var poolDesc in poolDescriptors)
