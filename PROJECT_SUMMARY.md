@@ -51,6 +51,7 @@
 - **Navigasyon**: Auth + (app) sekmeler; güvenli alan ve tema.
 - **Ekranlar**: Konular, çalışmalar, denemeler, istatistikler, program, not defteri, araçlar, ayarlar.
 - **Ortak**: API istemcisi, JWT saklama, `TopicPickerModal` ve `userTopicRows` (Konular listesi ile uyumlu konu seçimi).
+- **Kronometre + bildirim**: Android tarafında foreground bildirim ile canlı süre gösterimi; bildirimden `Duraklat` / `Bitir` aksiyonları ve durumun yerel kalıcı saklanması (`AsyncStorage`).
 - **İstatistikler**: Haftalık sütun grafik, net eğilimi, hedef net çizgisi (AsyncStorage), deneme listesi filtreleri, branş ders chip’leri.
 - **Diğer**: Deneme formu, tarih/saat doğrulamaları, program slotu + konu bağlantısı vb.
 
@@ -80,7 +81,7 @@
 
 Bunlar zorunlu değil; ürün olgunlaştıkça değerlendirilebilir:
 
-- **Bildirimler**: Günlük çalışma veya program slotu hatırlatıcısı (push).
+- **Bildirimler (ek)**: Günlük çalışma veya program slotu için planlı hatırlatıcı/push (kronometre bildirimi dışında).
 - **Çevrimdışı**: Son verileri önbelleğe alıp bağlantı gelince senkron (karmaşıklık yüksek).
 - **Widget**: Ana ekranda bugünkü program veya çalışma özeti (iOS/Android).
 - **Hedefler**: Sadece net değil; haftalık dk hedefi ve basit rozetler.
@@ -102,7 +103,7 @@ Bunlar zorunlu değil; ürün olgunlaştıkça değerlendirilebilir:
 | Bileşen | Durum |
 |---------|--------|
 | Backend API | Özellik olarak hazır; deploy ortamına bağlı |
-| Mobil uygulama | Ana kapsam tamamlandı (şimdilik “bitti” kabulü) |
+| Mobil uygulama | Ana kapsam tamamlandı; Android kronometre foreground bildirimi (canlı sayaç + Duraklat/Bitir) aktif |
 | Railway / prod | Sıradaki operasyonel adım |
 | Test & izleme | Kısmen; güçlendirilebilir |
 

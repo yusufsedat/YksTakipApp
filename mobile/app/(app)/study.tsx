@@ -17,6 +17,13 @@ import {
 
 import { apiGet, apiPost } from '../../src/lib/api';
 import { dateToApiIso, parseYmd, todayYmd } from '../../src/lib/date';
+import {
+  pauseStopwatchForegroundService,
+  startStopwatchForegroundService,
+  stopStopwatchForegroundService,
+  syncStopwatchForegroundNotification,
+} from '../../src/lib/stopwatchForegroundService';
+import { readStopwatchState, writeStopwatchState } from '../../src/lib/stopwatchState';
 import type { Paginated, StudyTimeDto, TopicDto, UserTopicDto } from '../../src/types/api';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -251,6 +258,21 @@ export default function StudyScreen() {
   );
 
   useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const saved = await readStopwatchState();
+      if (cancelled) return;
+      setIsRunning(saved.isRunning);
+      setElapsedMs(saved.elapsedMs);
+      setStartedAtMs(saved.startedAtMs);
+      setSelectedTopicId(saved.selectedTopicId);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isRunning || startedAtMs === null) return;
     const timer = setInterval(() => {
       setElapsedMs(Date.now() - startedAtMs);
@@ -259,15 +281,35 @@ export default function StudyScreen() {
   }, [isRunning, startedAtMs]);
 
   useEffect(() => {
+    if (!isRunning) return;
+    void syncStopwatchForegroundNotification(elapsedMs);
+  }, [isRunning, elapsedMs]);
+
+  useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       const prev = appStateRef.current;
       appStateRef.current = nextState;
-      if (prev.match(/inactive|background/) && nextState === 'active' && isRunning && startedAtMs !== null) {
-        setElapsedMs(Date.now() - startedAtMs);
+      if (prev.match(/inactive|background/) && nextState === 'active') {
+        void (async () => {
+          const saved = await readStopwatchState();
+          setIsRunning(saved.isRunning);
+          setElapsedMs(saved.elapsedMs);
+          setStartedAtMs(saved.startedAtMs);
+          setSelectedTopicId(saved.selectedTopicId);
+        })();
       }
     });
     return () => sub.remove();
-  }, [isRunning, startedAtMs]);
+  }, []);
+
+  useEffect(() => {
+    void writeStopwatchState({
+      isRunning,
+      elapsedMs,
+      startedAtMs,
+      selectedTopicId,
+    });
+  }, [isRunning, elapsedMs, startedAtMs, selectedTopicId]);
 
   const loadUserTopics = useCallback(async () => {
     try {
@@ -417,13 +459,16 @@ export default function StudyScreen() {
     setElapsedMs(0);
     setStartedAtMs(Date.now());
     setIsRunning(true);
+    void startStopwatchForegroundService(0);
   }
 
   function pauseTimer() {
     if (!isRunning || startedAtMs === null) return;
-    setElapsedMs(Date.now() - startedAtMs);
+    const nextElapsed = Date.now() - startedAtMs;
+    setElapsedMs(nextElapsed);
     setStartedAtMs(null);
     setIsRunning(false);
+    void pauseStopwatchForegroundService(nextElapsed);
   }
 
   function resumeTimer() {
@@ -432,14 +477,16 @@ export default function StudyScreen() {
       return;
     }
     if (isRunning || elapsedMs <= 0) return;
-    setStartedAtMs(Date.now() - elapsedMs);
+    setStartedAtMs(Date.now());
     setIsRunning(true);
+    void startStopwatchForegroundService(elapsedMs);
   }
 
   function resetTimer() {
     setIsRunning(false);
     setElapsedMs(0);
     setStartedAtMs(null);
+    void stopStopwatchForegroundService();
   }
 
   async function finishTimer() {
@@ -553,6 +600,7 @@ export default function StudyScreen() {
               ? `Konu: ${selectedTopicLabel}`
               : 'Başlatmak için yukarıdan bir konu seç.'}
           </Text>
+          <Text style={styles.timerHint}>Android bildiriminde canli sure gosterilir.</Text>
           <View style={styles.timerButtons}>
             {!(isRunning || elapsedMs > 0) ? (
               <Pressable style={[styles.timerBtn, styles.timerStartBtn]} onPress={startTimer} disabled={timerSaving}>

@@ -97,6 +97,7 @@ export async function checkAppVersionOnBoot(): Promise<void> {
     if (__DEV__) {
       console.warn('[version-check] failed', e);
     }
+    
     // Ağ/API hatası: uygulama akışını engelleme
   }
 }

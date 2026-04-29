@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '../src/lib/auth';
 import { checkAppVersionOnBoot } from '../src/lib/appVersionCheck';
+import { requestStopwatchNotificationPermission } from '../src/lib/stopwatchForegroundService';
 import { ThemeProvider, useTheme } from '../src/theme';
 
 function ThemedStack() {
@@ -22,6 +23,7 @@ function ThemedStack() {
 export default function RootLayout() {
   useEffect(() => {
     void checkAppVersionOnBoot();
+    void requestStopwatchNotificationPermission();
   }, []);
 
   return (
