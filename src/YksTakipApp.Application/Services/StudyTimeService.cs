@@ -68,6 +68,7 @@ namespace YksTakipApp.Application.Services
         {
             var weekAgo = DateTime.UtcNow.AddDays(-7);
             var times = await _db.StudyTimes
+                .AsNoTracking()
                 .Where(s => s.UserId == userId && s.Date >= weekAgo)
                 .ToListAsync();
             return times.Sum(s => s.DurationMinutes);
