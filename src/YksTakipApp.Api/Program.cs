@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Application.Options;
@@ -18,7 +20,25 @@ using YksTakipApp.Api.Endpoints;
 using YksTakipApp.Api.Data;
 using YksTakipApp.Api.Services;
 
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.Console(new RenderedCompactJsonFormatter())
+    .CreateBootstrapLogger();
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Host.UseSerilog((context, services, configuration) =>
+    {
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .WriteTo.Console(new RenderedCompactJsonFormatter());
+    });
+}
 
 // 💾 Database (MySQL + EF Core)
 builder.Services.AddDbContextPool<AppDbContext>(options =>
@@ -262,10 +282,12 @@ builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IProblemNoteService, ProblemNoteService>();
 builder.Services.AddSingleton<IAppVersionService, AppVersionService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // 🌍 Pipeline Configuration
 var app = builder.Build();
+app.Logger.LogInformation("Application startup completed for {Environment}.", app.Environment.EnvironmentName);
 
 // Production migration: Railway Pre-Deploy → ./railway-migrate.sh (Docker imajındaki efbundle).
 // Startup'ta MigrateAsync yok; Pre-Deploy başarısızsa deploy tamamlanmaz.
@@ -316,6 +338,17 @@ app.UseMiddleware<YksTakipApp.Api.Helpers.GlobalExceptionMiddleware>();
 // Test ortamında HttpLogging'i devre dışı bırak (ObjectPool sorunu nedeniyle)
 if (!app.Environment.IsEnvironment("Testing"))
 {
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("UserId", httpContext.User.Identity?.IsAuthenticated == true
+                ? httpContext.User.FindFirst("userId")?.Value
+                : null);
+        };
+    });
     app.UseHttpLogging();
 }
 
@@ -365,7 +398,7 @@ app.MapScheduleEndpoints();
 app.MapProblemNoteEndpoints();
 app.MapAppConfigEndpoints();
 
-// 🌱 Development: demo kullanıcı ve örnek veri (demo@ykstakip.local yoksa bir kez eklenir)
+//  Development: demo kullanıcı ve örnek veri (demo@ykstakip.local yoksa bir kez eklenir)
 if (app.Environment.IsDevelopment()
     && !string.Equals(Environment.GetEnvironmentVariable("SKIP_DEV_SEED"), "true", StringComparison.OrdinalIgnoreCase))
 {
@@ -374,29 +407,26 @@ if (app.Environment.IsDevelopment()
     // Dev ortamında şema güncel değilse (ör. yeni migration eklendiyse) seed sırasında patlamamak için
     // migration'ları otomatik uygula.
     await db.Database.MigrateAsync();
-    var appConfig = seedScope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var yksLogger = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("YksCurriculumSeed");
-    await YksCurriculumSeed.EnsureAsync(db, yksLogger, appConfig);
     var seedLogger = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DevDataSeeder");
     await DevDataSeeder.SeedAsync(db, seedLogger);
     var adminLogger = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("AdminDevSeeder");
     await AdminDevSeeder.EnsureAsync(db, adminLogger);
 }
 
-// 🚀 Production/Stage için tek seferlik müfredat seed kapısı.
-// Railway variable: SEED_YKS_CURRICULUM_ON_START=true
-if (!app.Environment.IsDevelopment()
-    && string.Equals(Environment.GetEnvironmentVariable("SEED_YKS_CURRICULUM_ON_START"), "true", StringComparison.OrdinalIgnoreCase))
-{
-    using var seedScope = app.Services.CreateScope();
-    var db = seedScope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var appConfig = seedScope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var loggerFactory = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>();
-    var seedLog = loggerFactory.CreateLogger("YksCurriculumSeed");
-
-    await YksCurriculumSeed.EnsureAsync(db, seedLog, appConfig);
-    seedLog.LogWarning(
-        "SEED_YKS_CURRICULUM_ON_START=true olduğu için YKS müfredat seed çalıştı. Tek seferlik kullanım sonrası bu env'i kapatmanız önerilir.");
-}
-
 app.Run();
+}
+catch (Exception ex)
+{
+    if (ex is HostAbortedException)
+    {
+        Log.Information("Host startup aborted by design-time tooling.");
+        throw;
+    }
+
+    Log.Fatal(ex, "Application terminated unexpectedly during startup.");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

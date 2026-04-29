@@ -6,7 +6,7 @@ namespace YksTakipApp.Api.Data;
 
 /// <summary>
 /// Sadece Development ortamında, veritabanında demo kullanıcı yoksa bir kez örnek veri ekler.
-/// Konular global katalogdan (YksCurriculumSeed) seçilir; ayrıca sahte konu satırı eklenmez.
+/// Konular migration ile yönetilen global katalogdan seçilir; ayrıca sahte konu satırı eklenmez.
 /// Demo giriş: demo@ykstakip.local / Demo123!
 /// </summary>
 public static class DevDataSeeder
@@ -139,7 +139,7 @@ public static class DevDataSeeder
 
             if (topicId == 0)
             {
-                logger.LogWarning("Demo konusu katalogda yok (YksCurriculumSeed önce çalışmalı): {Cat} / {Sub} / {Name}", cat, sub, name);
+                logger.LogWarning("Demo konusu katalogda yok (topics seed migration uygulanmalı): {Cat} / {Sub} / {Name}", cat, sub, name);
                 continue;
             }
 
