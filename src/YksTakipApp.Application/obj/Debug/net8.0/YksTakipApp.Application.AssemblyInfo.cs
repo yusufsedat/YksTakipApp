@@ -17,6 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyProductAttribute("YksTakipApp.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("YksTakipApp.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("YksTakipApp.Tests")]
 
 // MSBuild WriteCodeFragment sınıfı tarafından oluşturuldu.
 

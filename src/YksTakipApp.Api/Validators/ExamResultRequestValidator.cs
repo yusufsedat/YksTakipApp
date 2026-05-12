@@ -51,6 +51,10 @@ namespace YksTakipApp.Api.Validators
                 .When(x => x.Difficulty.HasValue);
 
             RuleForEach(x => x.Details).SetValidator(new ExamDetailInputValidator());
+
+            RuleFor(x => x.ClientRequestId)
+                .MaximumLength(100)
+                .When(x => !string.IsNullOrWhiteSpace(x.ClientRequestId));
         }
     }
 }

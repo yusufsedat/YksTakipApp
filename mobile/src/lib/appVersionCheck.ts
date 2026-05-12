@@ -2,6 +2,8 @@ import Constants from 'expo-constants';
 import * as Application from 'expo-application';
 import { Alert, Linking, Platform } from 'react-native';
 
+import { LogService } from './log';
+
 import { apiGet } from './api';
 
 type VersionConfigResponse = {
@@ -94,10 +96,7 @@ export async function checkAppVersionOnBoot(): Promise<void> {
       );
     }
   } catch (e) {
-    if (__DEV__) {
-      console.warn('[version-check] failed', e);
-    }
-    
+    LogService.warn('version-check failed', e);
     // Ağ/API hatası: uygulama akışını engelleme
   }
 }

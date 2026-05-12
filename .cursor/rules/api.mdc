@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+# API Rules
+
+- All requests go through `src/lib/api.ts`
+- Use only: `apiGet`, `apiPost`, `apiPut`, `apiDelete`
+- No raw `fetch` or `axios.create`
+
+- No API calls in components or MyComponents
+- Use `src/services/*` for domain logic
+
+- No duplicate API wrappers
+- No `any` in service contracts
+- Map DTO → UI model in service layer
+
+- Screens must not contain large API orchestration

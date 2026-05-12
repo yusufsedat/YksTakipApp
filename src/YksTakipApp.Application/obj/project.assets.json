@@ -2,17 +2,13 @@
   "version": 3,
   "targets": {
     "net8.0": {
-      "BCrypt.Net-Next/4.1.0": {
+      "BCrypt.Net-Next/4.2.0": {
         "type": "package",
         "compile": {
-          "lib/netstandard2.1/BCrypt.Net-Next.dll": {
-            "related": ".xml"
-          }
+          "lib/netstandard2.1/BCrypt-Net-Next.dll": {}
         },
         "runtime": {
-          "lib/netstandard2.1/BCrypt.Net-Next.dll": {
-            "related": ".xml"
-          }
+          "lib/netstandard2.1/BCrypt-Net-Next.dll": {}
         }
       },
       "CloudinaryDotNet/1.26.0": {
@@ -1161,31 +1157,27 @@
     }
   },
   "libraries": {
-    "BCrypt.Net-Next/4.1.0": {
-      "sha512": "5YT3DKllmtkyW68PjURu/V1TOe4MKiByKwsRNVcfYE1S5KuFTeozdmKzyNzolKiQF391OXCaQtINvYT3j1ERzQ==",
+    "BCrypt.Net-Next/4.2.0": {
+      "sha512": "gwLD2KfCuwQesP17aVh4h6lpiMPEVt5Lbpndo0ej903hNUUTtyxt3ARdDjmuydBRTAUICc7OVKVbaOvc6SQYXA==",
       "type": "package",
-      "path": "bcrypt.net-next/4.1.0",
+      "path": "bcrypt.net-next/4.2.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "bcrypt.net-next.4.1.0.nupkg.sha512",
+        "bcrypt.net-next.4.2.0.nupkg.sha512",
         "bcrypt.net-next.nuspec",
         "ico.png",
-        "lib/net10.0/BCrypt.Net-Next.dll",
+        "lib/net10.0/BCrypt-Net-Next.dll",
         "lib/net10.0/BCrypt.Net-Next.xml",
-        "lib/net20/BCrypt.Net-Next.dll",
-        "lib/net20/BCrypt.Net-Next.xml",
-        "lib/net35/BCrypt.Net-Next.dll",
-        "lib/net35/BCrypt.Net-Next.xml",
-        "lib/net462/BCrypt.Net-Next.dll",
+        "lib/net462/BCrypt-Net-Next.dll",
         "lib/net462/BCrypt.Net-Next.xml",
-        "lib/net472/BCrypt.Net-Next.dll",
+        "lib/net472/BCrypt-Net-Next.dll",
         "lib/net472/BCrypt.Net-Next.xml",
-        "lib/net48/BCrypt.Net-Next.dll",
+        "lib/net48/BCrypt-Net-Next.dll",
         "lib/net48/BCrypt.Net-Next.xml",
-        "lib/netstandard2.0/BCrypt.Net-Next.dll",
+        "lib/netstandard2.0/BCrypt-Net-Next.dll",
         "lib/netstandard2.0/BCrypt.Net-Next.xml",
-        "lib/netstandard2.1/BCrypt.Net-Next.dll",
+        "lib/netstandard2.1/BCrypt-Net-Next.dll",
         "lib/netstandard2.1/BCrypt.Net-Next.xml",
         "readme.md"
       ]
@@ -3852,11 +3844,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
+      "projectUniqueName": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
       "projectName": "YksTakipApp.Application",
-      "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
+      "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\YksTakipApp.Application.csproj",
       "packagesPath": "C:\\nuget",
-      "outputPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\obj\\",
+      "outputPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3877,11 +3869,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {
-              "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj"
+            "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj": {
+              "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Core\\YksTakipApp.Core.csproj"
             },
-            "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
-              "projectPath": "C:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj"
+            "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj": {
+              "projectPath": "c:\\Users\\yusuf\\Desktop\\YksTakipApp\\src\\YksTakipApp.Infra\\YksTakipApp.Infra.csproj"
             }
           }
         }

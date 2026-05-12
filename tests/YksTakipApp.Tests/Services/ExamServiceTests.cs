@@ -1,13 +1,30 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using YksTakipApp.Application.Services;
 using YksTakipApp.Core.Entities;
+using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Infra;
 
 namespace YksTakipApp.Tests.Services;
 
 public class ExamServiceTests
 {
+    private sealed class InMemoryBackgroundTaskQueue : IBackgroundTaskQueue
+    {
+        public List<AdaptationEvaluationJob> Jobs { get; } = [];
+        public int PendingCount => Jobs.Count;
+
+        public ValueTask EnqueueAdaptationEvaluationAsync(AdaptationEvaluationJob job, CancellationToken ct = default)
+        {
+            Jobs.Add(job);
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<AdaptationEvaluationJob> DequeueAdaptationEvaluationAsync(CancellationToken ct) =>
+            throw new NotSupportedException();
+    }
+
     private static AppDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -15,6 +32,9 @@ public class ExamServiceTests
             .Options;
         return new AppDbContext(options);
     }
+
+    private static ExamService CreateService(AppDbContext db, InMemoryBackgroundTaskQueue? queue = null) =>
+        new(db, queue ?? new InMemoryBackgroundTaskQueue(), NullLogger<ExamService>.Instance);
 
     [Fact]
     public async Task AddExamAsync_WhenValidData_CreatesExam()
@@ -26,7 +46,7 @@ public class ExamServiceTests
         var netAyt = 78.0;
 
         await using var db = CreateDb();
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
 
         await examService.AddExamAsync(
             userId,
@@ -76,7 +96,7 @@ public class ExamServiceTests
             });
         await db.SaveChangesAsync();
 
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
         var result = (await examService.GetUserExamsAsync(userId)).ToList();
 
         result.Should().HaveCount(2);
@@ -87,7 +107,7 @@ public class ExamServiceTests
     public async Task GetUserExamsAsync_WhenUserHasNoExams_ReturnsEmpty()
     {
         await using var db = CreateDb();
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
         var result = await examService.GetUserExamsAsync(1);
         result.Should().BeEmpty();
     }
@@ -109,7 +129,7 @@ public class ExamServiceTests
         await db.SaveChangesAsync();
         var examId = (await db.ExamResults.SingleAsync()).Id;
 
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
         await examService.DeleteExamAsync(userId, examId);
 
         (await db.ExamResults.CountAsync()).Should().Be(0);
@@ -119,7 +139,7 @@ public class ExamServiceTests
     public async Task DeleteExamAsync_WhenExamNotExists_DoesNothing()
     {
         await using var db = CreateDb();
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
         await examService.DeleteExamAsync(1, 999);
         (await db.ExamResults.CountAsync()).Should().Be(0);
     }
@@ -140,9 +160,42 @@ public class ExamServiceTests
         await db.SaveChangesAsync();
         var examId = (await db.ExamResults.SingleAsync()).Id;
 
-        var examService = new ExamService(db);
+        var examService = CreateService(db);
         await examService.DeleteExamAsync(userId: 1, examId);
 
         (await db.ExamResults.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task AddExamAsync_WhenWeakDetails_EnqueuesAdaptationJob()
+    {
+        await using var db = CreateDb();
+        db.Topics.Add(new Topic { Id = 10, Name = "Temel Kavramlar", Category = "TYT", Subject = "Matematik" });
+        db.UserTopics.Add(new UserTopic { UserId = 7, TopicId = 10, Status = TopicStatus.InProgress });
+        await db.SaveChangesAsync();
+
+        var queue = new InMemoryBackgroundTaskQueue();
+        var examService = CreateService(db, queue);
+
+        await examService.AddExamAsync(
+            userId: 7,
+            name: "TYT Deneme",
+            date: DateTime.UtcNow,
+            netTyt: 30,
+            netAyt: 0,
+            examType: "TYT",
+            subject: null,
+            durationMinutes: null,
+            difficulty: null,
+            errorReasons: null,
+            details:
+            [
+                new ExamDetail { Subject = "Matematik", Correct = 2, Wrong = 12, Blank = 26 }
+            ]);
+
+        queue.Jobs.Should().ContainSingle();
+        queue.Jobs[0].UserId.Should().Be(7);
+        queue.Jobs[0].TopicId.Should().Be(10);
+        queue.Jobs[0].RecentExamScorePercent.Should().BeLessThan(20);
     }
 }

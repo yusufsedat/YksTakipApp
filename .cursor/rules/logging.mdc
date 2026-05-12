@@ -1,0 +1,19 @@
+---
+alwaysApply: true
+---
+
+# Logging
+
+- No raw `console.*`
+
+- Use `LogService`
+
+- info → normal
+- warn → recoverable
+- error → failure
+
+- Logging ≠ user feedback
+
+- No duplicate logs across layers
+
+- Raw console allowed only inside logger implementation

@@ -27,7 +27,12 @@ namespace YksTakipApp.Api.Helpers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception");
+                _logger.LogError(
+                    ex,
+                    "Unhandled exception for {Method} {Path}. TraceId={TraceId}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    context.TraceIdentifier);
 
                 object problem = _env.IsProduction()
                     ? new

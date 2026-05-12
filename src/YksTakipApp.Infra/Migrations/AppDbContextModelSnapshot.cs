@@ -22,6 +22,56 @@ namespace YksTakipApp.Infra.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("YksTakipApp.Core.Entities.CommandExecution", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CommandKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ResponseHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<int>("RetryAttempt")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Operation", "CommandKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Operation", "CreatedAt");
+
+                    b.ToTable("CommandExecutions");
+                });
+
             modelBuilder.Entity("YksTakipApp.Core.Entities.ExamDetail", b =>
                 {
                     b.Property<int>("Id")
@@ -64,6 +114,10 @@ namespace YksTakipApp.Infra.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClientRequestId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
@@ -114,11 +168,159 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "ClientRequestId")
+                        .IsUnique();
+
                     b.HasIndex("UserId", "Date");
 
                     b.HasIndex("UserId", "TopicId");
 
                     b.ToTable("ExamResults");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.FeatureFlag", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("RolloutPercentage")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(100);
+
+                    b.Property<string>("Segment")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Key");
+
+                    b.HasIndex("Segment");
+
+                    b.ToTable("FeatureFlags");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.PlannerDecisionLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BreakdownJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("varchar(8000)");
+
+                    b.Property<int>("BufferDaily")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DailyCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("int");
+
+                    b.Property<double>("DynamicBufferRate")
+                        .HasColumnType("double");
+
+                    b.Property<double>("EffectiveCapacityMultiplier")
+                        .HasColumnType("double");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<int>("InjectedReviewTaskCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreservedTaskCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PriorityActiveCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PriorityPlacedCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QualityBand")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("QualityScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReasonCode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecommendationCandidateCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecommendationScheduledCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecommendationSkippedByCapacityCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecommendationSkippedByDuplicateCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskCountDiagnostic")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskCountReview")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskCountStudy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskCountTotal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("WeekEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date");
+
+                    b.Property<int>("WorkingDaily")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReasonCode");
+
+                    b.HasIndex("WeekStart");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("PlannerDecisionLogs");
                 });
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.ProblemNote", b =>
@@ -165,7 +367,7 @@ namespace YksTakipApp.Infra.Migrations
                     b.ToTable("ProblemNotes");
                 });
 
-            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleEntry", b =>
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -173,30 +375,47 @@ namespace YksTakipApp.Infra.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DayOfMonth")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DayOfWeek")
+                    b.Property<bool>("IsRecoveryTask")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("MainTopicId")
                         .HasColumnType("int");
 
-                    b.Property<int>("EndMinute")
+                    b.Property<int?>("PrerequisiteTopicId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Recurrence")
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<int>("StartMinute")
-                        .HasColumnType("int");
+                    b.Property<DateOnly>("TaskDate")
+                        .HasColumnType("date");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("TaskType")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)");
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasDefaultValue("Study");
 
-                    b.Property<int?>("TopicId")
+                    b.Property<int>("TopicId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -205,9 +424,13 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.HasIndex("TopicId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "Status");
 
-                    b.ToTable("ScheduleEntries");
+                    b.HasIndex("UserId", "TaskDate");
+
+                    b.HasIndex("UserId", "TaskDate", "TaskType");
+
+                    b.ToTable("ScheduleTasks");
                 });
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.StudyTime", b =>
@@ -217,6 +440,10 @@ namespace YksTakipApp.Infra.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClientRequestId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
@@ -237,6 +464,9 @@ namespace YksTakipApp.Infra.Migrations
                     b.HasIndex("TopicId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ClientRequestId")
+                        .IsUnique();
 
                     b.HasIndex("UserId", "Date");
 
@@ -261,6 +491,11 @@ namespace YksTakipApp.Infra.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
 
+                    b.Property<double>("OsymWeight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double")
+                        .HasDefaultValue(1.0);
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -277,6 +512,33 @@ namespace YksTakipApp.Infra.Migrations
                     b.ToTable("Topics");
                 });
 
+            modelBuilder.Entity("YksTakipApp.Core.Entities.TopicPrerequisite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PrerequisiteTopicId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TopicId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrerequisiteTopicId");
+
+                    b.HasIndex("TopicId", "PrerequisiteTopicId")
+                        .IsUnique();
+
+                    b.ToTable("TopicPrerequisites", t =>
+                        {
+                            t.HasCheckConstraint("CK_TopicPrerequisite_NoSelf", "`TopicId` <> `PrerequisiteTopicId`");
+                        });
+                });
+
             modelBuilder.Entity("YksTakipApp.Core.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -284,6 +546,9 @@ namespace YksTakipApp.Infra.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid?>("ActiveGoalVersionId")
+                        .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -314,12 +579,213 @@ namespace YksTakipApp.Infra.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
+                    b.Property<int>("SmartOnboardingSkipCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ActiveGoalVersionId");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserFeatureFlagOverride", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("FlagKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlagKey");
+
+                    b.HasIndex("UserId", "FlagKey")
+                        .IsUnique();
+
+                    b.ToTable("UserFeatureFlagOverrides");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DailyAvailableMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(120);
+
+                    b.Property<decimal?>("TargetAytNet")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("TargetDepartment")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<decimal?>("TargetTytNet")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("TargetUniversity")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("UserGoals");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserNotificationLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("varchar(3000)");
+
+                    b.Property<DateOnly>("TargetDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "TargetDate", "NotificationType")
+                        .IsUnique();
+
+                    b.ToTable("UserNotificationLogs");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserNotificationPreference", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DailyReminderEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<TimeOnly?>("QuietHoursEnd")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeOnly?>("QuietHoursStart")
+                        .HasColumnType("time(6)");
+
+                    b.Property<bool>("RecoveryReminderEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("WeeklyReviewEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserNotificationPreferences");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserPlannerChurnEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DaysSinceLastCompletedTask")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DaysSincePlanGenerated")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReasonCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("TriggerDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("WeekEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TriggerDate", "ReasonCode");
+
+                    b.HasIndex("UserId", "TriggerDate");
+
+                    b.HasIndex("UserId", "WeekStart", "ReasonCode")
+                        .IsUnique();
+
+                    b.ToTable("UserPlannerChurnEvents");
                 });
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.UserTopic", b =>
@@ -330,6 +796,38 @@ namespace YksTakipApp.Infra.Migrations
                     b.Property<int>("TopicId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPriorityRequested")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastEvaluatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<double>("MasteryConfidence")
+                        .HasColumnType("double");
+
+                    b.Property<string>("MasteryStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasDefaultValue("NotStarted");
+
+                    b.Property<DateTime?>("PriorityExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("PriorityRequestedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("PriorityResolvedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -338,6 +836,10 @@ namespace YksTakipApp.Infra.Migrations
                     b.HasIndex("TopicId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "IsLocked");
+
+                    b.HasIndex("UserId", "IsPriorityRequested", "PriorityExpiresAt");
 
                     b.ToTable("UserTopics");
                 });
@@ -382,15 +884,16 @@ namespace YksTakipApp.Infra.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleEntry", b =>
+            modelBuilder.Entity("YksTakipApp.Core.Entities.ScheduleTask", b =>
                 {
                     b.HasOne("YksTakipApp.Core.Entities.Topic", "Topic")
                         .WithMany()
                         .HasForeignKey("TopicId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("YksTakipApp.Core.Entities.User", "User")
-                        .WithMany("ScheduleEntries")
+                        .WithMany("ScheduleTasks")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -414,6 +917,44 @@ namespace YksTakipApp.Infra.Migrations
                         .IsRequired();
 
                     b.Navigation("Topic");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.TopicPrerequisite", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.Topic", "PrerequisiteTopic")
+                        .WithMany("Dependents")
+                        .HasForeignKey("PrerequisiteTopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("YksTakipApp.Core.Entities.Topic", "Topic")
+                        .WithMany("Prerequisites")
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PrerequisiteTopic");
+
+                    b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.User", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.UserGoal", null)
+                        .WithMany()
+                        .HasForeignKey("ActiveGoalVersionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
+            modelBuilder.Entity("YksTakipApp.Core.Entities.UserGoal", b =>
+                {
+                    b.HasOne("YksTakipApp.Core.Entities.User", "User")
+                        .WithMany("UserGoals")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -444,6 +985,10 @@ namespace YksTakipApp.Infra.Migrations
 
             modelBuilder.Entity("YksTakipApp.Core.Entities.Topic", b =>
                 {
+                    b.Navigation("Dependents");
+
+                    b.Navigation("Prerequisites");
+
                     b.Navigation("UserTopics");
                 });
 
@@ -453,9 +998,11 @@ namespace YksTakipApp.Infra.Migrations
 
                     b.Navigation("ProblemNotes");
 
-                    b.Navigation("ScheduleEntries");
+                    b.Navigation("ScheduleTasks");
 
                     b.Navigation("StudyTimes");
+
+                    b.Navigation("UserGoals");
 
                     b.Navigation("UserTopics");
                 });

@@ -5,6 +5,7 @@ namespace YksTakipApp.Api.DTOs
         public DateTime Date { get; set; } = DateTime.UtcNow;
         [System.ComponentModel.DataAnnotations.Range(1, 1440)]
         public int DurationMinutes { get; set; }
+        public string? ClientRequestId { get; set; }
 
         /// <summary>İsteğe bağlı: kullanıcı listesindeki konu.</summary>
         public int? TopicId { get; set; }

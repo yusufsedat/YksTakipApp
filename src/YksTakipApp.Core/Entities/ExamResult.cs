@@ -4,6 +4,7 @@ namespace YksTakipApp.Core.Entities
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+        public string? ClientRequestId { get; set; }
         public string ExamName { get; set; } = null!;
         public string ExamType { get; set; } = "TYT"; // TYT, AYT, BRANS
         public string? Subject { get; set; } // BRANS icin ders adi

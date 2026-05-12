@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using YksTakipApp.Core.Entities;
 using YksTakipApp.Core.Interfaces;
+using YksTakipApp.Core.Models;
 using YksTakipApp.Infra;
 
 namespace YksTakipApp.Application.Services
@@ -18,7 +19,23 @@ namespace YksTakipApp.Application.Services
             => await CreateOrAccumulateStudyTimeAsync(userId, minutes, date, topicId);
 
         public async Task<StudyTime> CreateOrAccumulateStudyTimeAsync(int userId, int minutes, DateTime date, int? topicId)
+            => (await CreateOrAccumulateStudyTimeIdempotentAsync(userId, minutes, date, topicId, clientRequestId: null)).Entity;
+
+        public async Task<IdempotentCreateResult<StudyTime>> CreateOrAccumulateStudyTimeIdempotentAsync(
+            int userId,
+            int minutes,
+            DateTime date,
+            int? topicId,
+            string? clientRequestId)
         {
+            if (!string.IsNullOrWhiteSpace(clientRequestId))
+            {
+                var existingByRequest = await _db.StudyTimes
+                    .FirstOrDefaultAsync(s => s.UserId == userId && s.ClientRequestId == clientRequestId);
+                if (existingByRequest is not null)
+                    return new IdempotentCreateResult<StudyTime>(existingByRequest, IsReplay: true);
+            }
+
             var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
             var day = utcDate.Date;
 
@@ -38,21 +55,39 @@ namespace YksTakipApp.Application.Services
             if (existing is not null)
             {
                 existing.DurationMinutes += minutes;
+                if (!string.IsNullOrWhiteSpace(clientRequestId))
+                    existing.ClientRequestId = clientRequestId;
                 await _db.SaveChangesAsync();
-                return existing;
+                return new IdempotentCreateResult<StudyTime>(existing, IsReplay: false);
             }
 
             var studyTime = new StudyTime
             {
                 UserId = userId,
+                ClientRequestId = clientRequestId,
                 DurationMinutes = minutes,
                 Date = utcDate,
                 TopicId = topicId
             };
 
             _db.StudyTimes.Add(studyTime);
-            await _db.SaveChangesAsync();
-            return studyTime;
+            try
+            {
+                await _db.SaveChangesAsync();
+                return new IdempotentCreateResult<StudyTime>(studyTime, IsReplay: false);
+            }
+            catch (DbUpdateException)
+            {
+                if (!string.IsNullOrWhiteSpace(clientRequestId))
+                {
+                    var replay = await _db.StudyTimes
+                        .FirstOrDefaultAsync(s => s.UserId == userId && s.ClientRequestId == clientRequestId);
+                    if (replay is not null)
+                        return new IdempotentCreateResult<StudyTime>(replay, IsReplay: true);
+                }
+
+                throw;
+            }
         }
 
         public async Task<IEnumerable<StudyTime>> GetStudyTimesAsync(int userId)

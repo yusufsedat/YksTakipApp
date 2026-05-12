@@ -89,12 +89,14 @@ function buildTopicStyleSheet(c: ThemeColors) {
       color: c.text,
     },
     listContent: { paddingHorizontal: 16, paddingBottom: 32 },
+    swipeRowOuter: {
+      marginBottom: 10,
+    },
     card: {
       flexDirection: 'row' as const,
       alignItems: 'stretch' as const,
       backgroundColor: c.surface,
       borderRadius: 12,
-      marginBottom: 10,
       borderWidth: 1,
       borderColor: c.border,
       overflow: 'hidden' as const,
@@ -103,14 +105,35 @@ function buildTopicStyleSheet(c: ThemeColors) {
       borderLeftWidth: 4,
       borderLeftColor: c.statusDone,
     },
+    cardLocked: { opacity: 0.55 },
+    lockBanner: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+      backgroundColor: c.surfaceMuted,
+    },
+    lockBannerText: { flex: 1, fontSize: 12, fontWeight: '700' as const, color: c.statusReview },
     cardMain: { flex: 1, padding: 14 },
     cardTitleRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardCheck: { marginTop: 2 },
+    swipeDeleteWrap: {
+      width: 88,
+      justifyContent: 'center' as const,
+      paddingVertical: 6,
+      paddingLeft: 8,
+    },
     swipeDelete: {
-      width: 72,
+      flex: 1,
+      minHeight: 56,
       justifyContent: 'center' as const,
       alignItems: 'center' as const,
       backgroundColor: 'rgba(185, 61, 74, 0.92)',
+      borderRadius: 12,
+      overflow: 'hidden' as const,
     },
     cardTitle: { fontSize: 17, fontWeight: '700' as const, color: c.text },
     cardCat: { fontSize: 14, color: c.textMuted, marginTop: 5 },
@@ -319,6 +342,18 @@ export default function TopicsScreen() {
   const [celebrateMsg, setCelebrateMsg] = useState<string | null>(null);
   const celebrateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** Tek seferde yalnızca bir satır açık kalsın; liste kaydırılınca hepsi kapansın. */
+  const swipeRefs = useRef<Map<number, { close(): void }>>(new Map());
+  const closeAllSwipeables = useCallback(() => {
+    swipeRefs.current.forEach((s) => {
+      try {
+        s.close();
+      } catch {
+        /* noop */
+      }
+    });
+  }, []);
+
   // Admin: global kataloğa konu ekleme
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminName, setAdminName] = useState('');
@@ -518,6 +553,7 @@ export default function TopicsScreen() {
 
   async function updateStatus(topicId: number, status: TopicStatusValue) {
     setActionError(null);
+    closeAllSwipeables();
     try {
       await apiPost('/user/topics/update', { topicId, status });
       setStatusModal(null);
@@ -529,6 +565,23 @@ export default function TopicsScreen() {
           celebrateTimerRef.current = null;
         }, 4500);
       }
+      setLoading(true);
+      await load();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Güncellenemedi.');
+    }
+  }
+
+  async function markLearnedExternally(topicId: number) {
+    setActionError(null);
+    closeAllSwipeables();
+    try {
+      await apiPost('/user/topics/update', {
+        topicId,
+        status: TopicStatus.InProgress,
+        learnedExternally: true,
+      });
+      setStatusModal(null);
       setLoading(true);
       await load();
     } catch (e) {
@@ -595,16 +648,18 @@ export default function TopicsScreen() {
 
   const renderSwipeDelete = useCallback(
     (item: Row) => (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Listeden çıkar"
-        style={styles.swipeDelete}
-        onPress={() => removeFromList(item.topicId, item.name)}
-      >
-        <Ionicons name="trash-outline" size={24} color={colors.onPrimary} />
-      </Pressable>
+      <View style={styles.swipeDeleteWrap}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Listeden çıkar"
+          style={styles.swipeDelete}
+          onPress={() => removeFromList(item.topicId, item.name)}
+        >
+          <Ionicons name="trash-outline" size={24} color={colors.onPrimary} />
+        </Pressable>
+      </View>
     ),
-    [colors.onPrimary, removeFromList, styles.swipeDelete]
+    [colors.onPrimary, removeFromList, styles.swipeDelete, styles.swipeDeleteWrap]
   );
 
   const listHeader = useMemo(
@@ -745,6 +800,7 @@ export default function TopicsScreen() {
         style={styles.list}
         data={visibleRows}
         keyExtractor={(item) => String(item.topicId)}
+        onMomentumScrollBegin={closeAllSwipeables}
         onScroll={(e) => {
           const y = e.nativeEvent.contentOffset.y;
           setScrollY(y);
@@ -765,16 +821,39 @@ export default function TopicsScreen() {
         renderItem={({ item: row }) => {
             const done = row.status === TopicStatus.Completed;
             return (
+              <View style={styles.swipeRowOuter}>
               <Swipeable
+                key={`${row.topicId}-${row.status}`}
                 friction={2}
                 overshootRight={false}
+                ref={(el) => {
+                  if (el) swipeRefs.current.set(row.topicId, el);
+                  else swipeRefs.current.delete(row.topicId);
+                }}
+                onSwipeableWillOpen={() => {
+                  swipeRefs.current.forEach((ref, id) => {
+                    if (id !== row.topicId) ref.close();
+                  });
+                }}
                 renderRightActions={() => renderSwipeDelete(row)}
               >
-                <View style={[styles.card, done && styles.cardDone]}>
+                <View style={[styles.card, done && styles.cardDone, row.isLocked && styles.cardLocked]}>
+                  {row.isLocked ? (
+                    <View style={styles.lockBanner}>
+                      <Ionicons name="lock-closed" size={16} color={colors.statusReview} />
+                      <Text style={styles.lockBannerText}>Ön koşul konusu tekrar edilmeli</Text>
+                    </View>
+                  ) : null}
                   <Pressable
                     style={styles.cardMain}
+                    disabled={row.isLocked}
                     onPress={() => {
+                      if (row.isLocked) {
+                        Alert.alert('Kilitli', 'Ön koşul konusu tekrar edilmeli.');
+                        return;
+                      }
                       setActionError(null);
+                      closeAllSwipeables();
                       setStatusModal(row);
                     }}
                   >
@@ -796,10 +875,20 @@ export default function TopicsScreen() {
                     <Text style={[styles.cardStatus, { color: statusColorByValue[row.status] ?? colors.primary }]}>
                       {topicStatusLabel[row.status] ?? '—'}
                     </Text>
-                    <Text style={styles.cardHint}>Durum için dokun · Sola kaydır: listeden çıkar</Text>
+                    {row.masteryStatus === 'learnedExternally' ? (
+                      <Text style={styles.cardHint}>
+                        Dışarıda öğrenildi · güven {(row.masteryConfidence ?? 0).toFixed(2)}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.cardHint}>
+                      {row.isLocked
+                        ? 'Kilitli: önce ön koşul tekrarı gerekir.'
+                        : 'Durum için dokun · Sola kaydır: listeden çıkar'}
+                    </Text>
                   </Pressable>
                 </View>
               </Swipeable>
+              </View>
             );
           }}
           contentContainerStyle={[
@@ -825,6 +914,12 @@ export default function TopicsScreen() {
                 <Text style={styles.modalRowText}>{opt.label}</Text>
               </Pressable>
             ))}
+            <Pressable
+              style={styles.modalRow}
+              onPress={() => statusModal && void markLearnedExternally(statusModal.topicId)}
+            >
+              <Text style={styles.modalRowText}>Ön koşulu dışarıda hallettim (güven 0.55)</Text>
+            </Pressable>
             <Pressable
               style={styles.modalRowDanger}
               onPress={() => statusModal && removeFromList(statusModal.topicId, statusModal.name)}

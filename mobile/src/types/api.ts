@@ -13,7 +13,11 @@ export type TopicDto = {
 export type UserTopicDto = {
   userId: number;
   topicId: number;
-  status: number;
+  /** 0–3 veya (eski/JSON enum) string; `mergeUserTopicsWithCatalog` sayıya çevirir. */
+  status: number | string;
+  masteryStatus?: string;
+  masteryConfidence?: number;
+  isLocked?: boolean;
 };
 
 export type StudyTimeDto = {
@@ -24,20 +28,6 @@ export type StudyTimeDto = {
   topicId?: number | null;
   topicName?: string | null;
 };
-
-/** Haftalık: dayOfWeek 0=Pazar…6=Cumartesi. Aylık: dayOfMonth 1–31. */
-export type ScheduleEntryDto = {
-  id: number;
-  recurrence: string;
-  dayOfWeek: number | null;
-  dayOfMonth: number | null;
-  startMinute: number;
-  endMinute: number;
-  title: string;
-  topicId?: number | null;
-};
-
-export type ScheduleListResponse = { items: ScheduleEntryDto[] };
 
 export type ProblemNoteDto = {
   id: number;

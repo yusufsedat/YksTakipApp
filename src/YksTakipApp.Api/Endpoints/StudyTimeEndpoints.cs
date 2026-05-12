@@ -5,6 +5,7 @@ using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Api.Helpers; 
 using YksTakipApp.Infra;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace YksTakipApp.Api.Endpoints
 {
@@ -17,21 +18,28 @@ namespace YksTakipApp.Api.Endpoints
                 StudyTimeRequest request,
                 IValidator<StudyTimeRequest> validator,
                 IStudyTimeService service,
-                HttpContext ctx) =>
+                HttpContext ctx,
+                ILoggerFactory loggerFactory) =>
             {
                 var userId = ctx.GetUserId(); // güvenli claim alma
                 if (userId is null)
                     return Results.Unauthorized();
+                var idempotencyKey = RequestContextHelper.ResolveIdempotencyKey(ctx, request.ClientRequestId);
+                var log = loggerFactory.CreateLogger("StudyTimeEndpoints");
+                using var _ = RequestContextHelper.PushOperationContext(ctx, "StudyTime.Add", userId, idempotencyKey);
 
                 var validation = await validator.ValidateAsync(request);
                 if (!validation.IsValid)
                     return ctx.ValidationProblem(validation.ToDictionary());
                 try
                 {
-                    await service.CreateOrAccumulateStudyTimeAsync(userId.Value, request.DurationMinutes, request.Date, request.TopicId);
+                    var result = await service.CreateOrAccumulateStudyTimeIdempotentAsync(
+                        userId.Value, request.DurationMinutes, request.Date, request.TopicId, idempotencyKey);
+                    log.LogInformation("StudyTime add finished with {Result}.", result.IsReplay ? "replay" : "success");
                 }
                 catch (InvalidOperationException ex)
                 {
+                    log.LogWarning(ex, "StudyTime add validation failed with {Result}.", "fail");
                     return Results.BadRequest(new { message = ex.Message });
                 }
                 return Results.Ok(new { message = "Çalışma süresi kaydedildi." });
@@ -46,11 +54,15 @@ namespace YksTakipApp.Api.Endpoints
                 StudyTimeRequest request,
                 IValidator<StudyTimeRequest> validator,
                 IStudyTimeService service,
-                HttpContext ctx) =>
+                HttpContext ctx,
+                ILoggerFactory loggerFactory) =>
             {
                 var userId = ctx.GetUserId();
                 if (userId is null)
                     return Results.Unauthorized();
+                var idempotencyKey = RequestContextHelper.ResolveIdempotencyKey(ctx, request.ClientRequestId);
+                var log = loggerFactory.CreateLogger("StudyTimeEndpoints");
+                using var _ = RequestContextHelper.PushOperationContext(ctx, "StudyTime.Create", userId, idempotencyKey);
 
                 var validation = await validator.ValidateAsync(request);
                 if (!validation.IsValid)
@@ -58,10 +70,17 @@ namespace YksTakipApp.Api.Endpoints
 
                 try
                 {
-                    var saved = await service.CreateOrAccumulateStudyTimeAsync(userId.Value, request.DurationMinutes, request.Date, request.TopicId);
+                    var created = await service.CreateOrAccumulateStudyTimeIdempotentAsync(
+                        userId.Value, request.DurationMinutes, request.Date, request.TopicId, idempotencyKey);
+                    var saved = created.Entity;
+                    if (created.IsReplay)
+                        log.LogWarning("StudyTime create replayed with {Result}.", "replay");
+                    else
+                        log.LogInformation("StudyTime create finished with {Result}.", "success");
                     return Results.Ok(new
                     {
                         message = "Çalışma süresi kaydedildi.",
+                        replay = created.IsReplay,
                         item = new
                         {
                             saved.Id,
@@ -74,6 +93,7 @@ namespace YksTakipApp.Api.Endpoints
                 }
                 catch (InvalidOperationException ex)
                 {
+                    log.LogWarning(ex, "StudyTime create failed with {Result}.", "fail");
                     return Results.BadRequest(new { message = ex.Message });
                 }
             })
@@ -86,11 +106,14 @@ namespace YksTakipApp.Api.Endpoints
                 StudyTimeBulkCreateRequest request,
                 IValidator<StudyTimeRequest> validator,
                 IStudyTimeService service,
-                HttpContext ctx) =>
+                HttpContext ctx,
+                ILoggerFactory loggerFactory) =>
             {
                 var userId = ctx.GetUserId();
                 if (userId is null)
                     return Results.Unauthorized();
+                var log = loggerFactory.CreateLogger("StudyTimeEndpoints");
+                using var _ = RequestContextHelper.PushOperationContext(ctx, "StudyTime.BulkCreate", userId, idempotencyKey: null);
 
                 if (request.Items is null || request.Items.Count == 0)
                     return Results.BadRequest(new { message = "En az bir kayıt gönderilmelidir." });
@@ -113,14 +136,19 @@ namespace YksTakipApp.Api.Endpoints
 
                     try
                     {
-                        await service.CreateOrAccumulateStudyTimeAsync(userId.Value, item.DurationMinutes, item.Date, item.TopicId);
+                        var result = await service.CreateOrAccumulateStudyTimeIdempotentAsync(
+                            userId.Value, item.DurationMinutes, item.Date, item.TopicId, item.ClientRequestId);
                         savedCount++;
+                        if (result.IsReplay)
+                            log.LogWarning("Bulk studytime replayed for item index {ItemIndex}.", i);
                     }
                     catch (InvalidOperationException)
                     {
                         failedIndexes.Add(i);
                     }
                 }
+
+                log.LogInformation("StudyTime bulk create finished with {Result}. Saved={SavedCount}, Failed={FailedCount}.", "success", savedCount, failedIndexes.Count);
 
                 return Results.Ok(new
                 {
@@ -140,11 +168,15 @@ namespace YksTakipApp.Api.Endpoints
                 StudyTimeCreateApiRequest request,
                 IStudyTimeService service,
                 AppDbContext db,
-                HttpContext ctx) =>
+                HttpContext ctx,
+                ILoggerFactory loggerFactory) =>
             {
                 var userId = ctx.GetUserId();
                 if (userId is null)
                     return Results.Unauthorized();
+                var idempotencyKey = RequestContextHelper.ResolveIdempotencyKey(ctx, request.ClientRequestId);
+                var log = loggerFactory.CreateLogger("StudyTimeEndpoints");
+                using var _ = RequestContextHelper.PushOperationContext(ctx, "StudyTime.CreateApi", userId, idempotencyKey);
 
                 if (request.UserId.HasValue && request.UserId.Value != userId.Value)
                     return Results.BadRequest(new { message = "UserId geçersiz." });
@@ -174,15 +206,19 @@ namespace YksTakipApp.Api.Endpoints
 
                 try
                 {
-                    var saved = await service.CreateOrAccumulateStudyTimeAsync(
+                    var created = await service.CreateOrAccumulateStudyTimeIdempotentAsync(
                         userId.Value,
                         request.DurationMinutes,
                         request.Date,
-                        topicId);
+                        topicId,
+                        idempotencyKey);
+                    var saved = created.Entity;
+                    log.LogInformation("StudyTime api create finished with {Result}.", created.IsReplay ? "replay" : "success");
 
                     return Results.Ok(new
                     {
                         message = "Çalışmalarım bölümüne eklendi!",
+                        replay = created.IsReplay,
                         item = new
                         {
                             saved.Id,
@@ -196,6 +232,7 @@ namespace YksTakipApp.Api.Endpoints
                 }
                 catch (InvalidOperationException ex)
                 {
+                    log.LogWarning(ex, "StudyTime api create failed with {Result}.", "fail");
                     return Results.BadRequest(new { message = ex.Message });
                 }
             })

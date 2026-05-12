@@ -128,6 +128,7 @@ namespace YksTakipApp.Api.Endpoints
                     return Results.NotFound(new { message = "Kullanıcı bulunamadı." });
 
                 var topics = await topicService.GetUserTopicsAsync(userId.Value);
+                var topicsPayload = topics.Select(UserTopicMapping.ToResponseDto);
                 var totalMinutes = await studyService.GetTotalMinutesLast7DaysAsync(userId.Value);
                 var exams = await examService.GetUserExamsAsync(userId.Value);
                 var examStreakDays = await statsService.GetExamStreakDaysAsync(userId.Value);
@@ -138,7 +139,7 @@ namespace YksTakipApp.Api.Endpoints
                     name = user.Name,
                     email = user.Email,
                     role = user.Role,
-                    topics,
+                    topics = topicsPayload,
                     stats = new
                     {
                         totalMinutesLast7Days = totalMinutes,

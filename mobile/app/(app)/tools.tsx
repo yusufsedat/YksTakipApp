@@ -12,8 +12,10 @@ import { useTheme } from '../../src/theme';
 
 const TOOL_ITEMS = [
   { key: 'study', title: 'Çalışmalarım', icon: 'time-outline', href: '/(app)/study' },
-  { key: 'schedule', title: 'Program', icon: 'calendar-outline', href: '/(app)/schedule' },
   { key: 'notebook', title: 'Kumbara', icon: 'archive-outline', href: '/(app)/notebook' },
+  { key: 'recommendations', title: 'Öneriler', icon: 'bulb-outline', href: '/(app)/recommendations' },
+  { key: 'dynamic-plan', title: 'Dinamik Plan', icon: 'calendar-number-outline', href: '/(app)/dynamic-plan' },
+  { key: 'smart-plan', title: 'Akıllı Plan', icon: 'sparkles-outline', href: '/(app)/goal-onboarding' },
   { key: 'settings', title: 'Görünüm', icon: 'color-palette-outline', href: '/(app)/settings' },
 ];
 
@@ -74,7 +76,7 @@ export default function ToolsScreen() {
       <ScrollView style={styles.container} contentContainerStyle={scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Araçlar</Text>
-          <Text style={styles.sub}>Çalışma, program ve kumbara işlemlerini tek yerde toplayan menü.</Text>
+          <Text style={styles.sub}>Çalışma, plan ve kumbara işlemlerini tek yerde toplayan menü.</Text>
         </View>
 
         <View style={styles.cardGrid}>
@@ -89,11 +91,15 @@ export default function ToolsScreen() {
                   <Text style={styles.toolHint}>
                     {t.key === 'study'
                       ? 'Geçen çalışma dakikalarını ekle ve takip et.'
-                      : t.key === 'schedule'
-                        ? 'Haftalık/aylık ders tekrar slotlarını planla.'
-                        : t.key === 'notebook'
+                      : t.key === 'notebook'
                           ? 'Çözülemeyen soruları fotoğrafla not al ve etiketle.'
-                          : 'Tema modunu seç ve gece deneyimini ayarla.'}
+                          : t.key === 'recommendations'
+                            ? 'Bugün hangi konuyu çalışacağına dair akıllı öneri listesi.'
+                            : t.key === 'dynamic-plan'
+                              ? 'Haftalık öncelik planı: görevleri tamamla veya atla.'
+                              : t.key === 'smart-plan'
+                              ? 'Hedef üniversite ve bölümünü belirleyerek kişisel plan akışına gir.'
+                              : 'Tema modunu seç ve gece deneyimini ayarla.'}
                   </Text>
                 </View>
               </Pressable>

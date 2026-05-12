@@ -111,13 +111,31 @@ export async function apiGet<T>(path: string): Promise<T> {
   return res.data;
 }
 
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await apiClient.post<T>(path.startsWith('/') ? path : `/${path}`, body);
+export type ApiRequestOptions = {
+  /** Throw atmadan kabul edilecek extra HTTP statüleri (ör. business-rule 422). */
+  acceptStatuses?: number[];
+};
+
+function buildRequestConfig(opts?: ApiRequestOptions) {
+  if (!opts?.acceptStatuses?.length) return undefined;
+  const allow = new Set([...opts.acceptStatuses]);
+  return {
+    validateStatus: (status: number) => (status >= 200 && status < 300) || allow.has(status),
+  };
+}
+
+export async function apiPost<T>(path: string, body: unknown, opts?: ApiRequestOptions): Promise<T> {
+  const res = await apiClient.post<T>(path.startsWith('/') ? path : `/${path}`, body, buildRequestConfig(opts));
   return res.data;
 }
 
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   const res = await apiClient.put<T>(path.startsWith('/') ? path : `/${path}`, body);
+  return res.data;
+}
+
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  const res = await apiClient.patch<T>(path.startsWith('/') ? path : `/${path}`, body);
   return res.data;
 }
 

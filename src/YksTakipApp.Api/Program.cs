@@ -10,6 +10,10 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Formatting.Compact;
+using Serilog.Events;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Serilog.Context;
 
 using YksTakipApp.Core.Interfaces;
 using YksTakipApp.Application.Options;
@@ -19,10 +23,15 @@ using YksTakipApp.Infra.Repositories;
 using YksTakipApp.Api.Endpoints;
 using YksTakipApp.Api.Data;
 using YksTakipApp.Api.Services;
+using YksTakipApp.Api.BackgroundWorkers;
+using YksTakipApp.Api.Helpers;
+using YksTakipApp.Application.Infrastructure;
 
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
     .Enrich.FromLogContext()
-    .WriteTo.Console(new RenderedCompactJsonFormatter())
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
     .CreateBootstrapLogger();
 
 try
@@ -32,15 +41,26 @@ if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Host.UseSerilog((context, services, configuration) =>
     {
+        var isDev = context.HostingEnvironment.IsDevelopment();
         configuration
             .ReadFrom.Configuration(context.Configuration)
             .ReadFrom.Services(services)
-            .Enrich.FromLogContext()
-            .WriteTo.Console(new RenderedCompactJsonFormatter());
+            .Enrich.FromLogContext();
+
+        if (isDev)
+        {
+            configuration.WriteTo.Console(
+                restrictedToMinimumLevel: LogEventLevel.Information,
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}");
+        }
+        else
+        {
+            configuration.WriteTo.Console(new RenderedCompactJsonFormatter());
+        }
     });
 }
 
-// 💾 Database (MySQL + EF Core)
+//  Database (MySQL + EF Core)
 builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
     
@@ -84,7 +104,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
 });
 builder.Services.AddScoped<DbContext, AppDbContext>();
 
-// 🌐 CORS (React Native / Web istemcileri için)
+//  CORS (React Native / Web istemcileri için)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultCors", policy =>
@@ -117,7 +137,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 🔐 JWT Authentication
+//  JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key") 
              ?? builder.Configuration["Jwt:Key"] 
@@ -188,7 +208,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Admin"));
 });
 
-// 🚦 Rate Limiting
+//  Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("login", opt =>
@@ -205,7 +225,7 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// 🧩 Swagger
+//  Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -242,15 +262,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 📜 HTTP Logging servisi (UseHttpLogging middleware için gerekli)
+//  HTTP Logging servisi (UseHttpLogging middleware için gerekli)
 builder.Services.AddHttpLogging(options =>
 {
     options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestPropertiesAndHeaders |
                             Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
 });
 
-// ☁️ Cloudinary (soru notu görselleri). Production’da ortam değişkenleri zorunlu.
+//  Cloudinary (soru notu görselleri). Production’da ortam değişkenleri zorunlu.
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(CloudinarySettings.SectionName));
+builder.Services.Configure<AdaptationPolicyOptions>(builder.Configuration.GetSection(AdaptationPolicyOptions.SectionName));
 builder.Services.AddSingleton<IProblemNoteImageStorage>(sp =>
 {
     var env = sp.GetRequiredService<IHostEnvironment>();
@@ -272,20 +293,43 @@ builder.Services.AddSingleton<IProblemNoteImageStorage>(sp =>
         sp.GetRequiredService<ILogger<CloudinaryProblemNoteImageStorage>>());
 });
 
-// 🧱 Dependency Injection (Repository + Services)
+//  Dependency Injection (Repository + Services)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudyTimeService, StudyTimeService>();
 builder.Services.AddScoped<ITopicService, TopicService>();
 builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
-builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IProblemNoteService, ProblemNoteService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+builder.Services.AddScoped<IAdaptationService, AdaptationService>();
+builder.Services.AddSingleton<IPlannerDecisionContextBuilder, PlannerDecisionContextBuilder>();
+builder.Services.AddSingleton<IPlanQualityScorer, PlanQualityScorer>();
+builder.Services.AddScoped<IPlannerDecisionLogger, PlannerDecisionLogger>();
+builder.Services.AddScoped<IUserSegmentResolver, UserSegmentResolver>();
+builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
+builder.Services.AddScoped<IPlannerDebugReader, PlannerDebugReader>();
+builder.Services.AddScoped<IDynamicPlannerService, DynamicPlannerService>();
+builder.Services.AddScoped<ICommandExecutionService, CommandExecutionService>();
+builder.Services.AddScoped<IIdempotentCommandExecutor, IdempotentCommandExecutor>();
+builder.Services.AddScoped<INotificationPolicyService, NotificationPolicyService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddSingleton<IBackgroundWorkerTelemetry, BackgroundWorkerTelemetry>();
+builder.Services.AddHostedService<AdaptationWorker>();
 builder.Services.AddSingleton<IAppVersionService, AppVersionService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// 🌍 Pipeline Configuration
+builder.Services.ConfigureHttpJsonOptions(o =>
+{
+    o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    o.SerializerOptions.PropertyNameCaseInsensitive = true;
+    o.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true));
+});
+
+//  Pipeline Configuration
 var app = builder.Build();
 app.Logger.LogInformation("Application startup completed for {Environment}.", app.Environment.EnvironmentName);
 
@@ -308,7 +352,7 @@ if (app.Environment.IsDevelopment())
     .WithDescription("Sadece development ortamında veritabanı bağlantısını hızlıca doğrulamak için kullanılır.");
 }
 
-// 🔒 Security Headers (Production'da)
+//  Security Headers (Production'da)
 if (!app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>
@@ -331,10 +375,24 @@ if (!app.Environment.IsDevelopment())
 
 app.UseCors("DefaultCors");
 
-// 🧯 Global Exception Handling
+app.Use(async (context, next) =>
+{
+    var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault();
+    if (string.IsNullOrWhiteSpace(correlationId))
+        correlationId = context.TraceIdentifier;
+    context.Response.Headers["X-Correlation-Id"] = correlationId;
+
+    using (LogContext.PushProperty("CorrelationId", correlationId))
+    using (LogContext.PushProperty("RequestId", context.TraceIdentifier))
+    {
+        await next();
+    }
+});
+
+//  Global Exception Handling
 app.UseMiddleware<YksTakipApp.Api.Helpers.GlobalExceptionMiddleware>();
 
-// 📜 HTTP request logging
+//  HTTP request logging
 // Test ortamında HttpLogging'i devre dışı bırak (ObjectPool sorunu nedeniyle)
 if (!app.Environment.IsEnvironment("Testing"))
 {
@@ -357,33 +415,84 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 📚 Endpoints
+//  Endpoints
 app.MapGet("/", () => "✅ YksTakipApp API running!")
     .WithTags("System")
     .WithSummary("API durum endpointi")
     .WithDescription("Servisin ayakta olduğunu doğrulayan basit karşılama endpointidir.");
 
 // Sağlık + DB bağlantısı (Railway / izleme; JWT gerekmez)
-app.MapGet("/health", async (AppDbContext db, ILoggerFactory loggerFactory) =>
+app.MapGet("/health", async (
+    AppDbContext db,
+    IBackgroundTaskQueue queue,
+    IBackgroundWorkerTelemetry workerTelemetry,
+    ILoggerFactory loggerFactory) =>
 {
     var log = loggerFactory.CreateLogger("Health");
+    var startedAt = DateTimeOffset.UtcNow;
+    var dbStatus = "ok";
+    double? dbLatencyMs = null;
+
     try
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var ok = await db.Database.CanConnectAsync();
+        sw.Stop();
+        dbLatencyMs = sw.Elapsed.TotalMilliseconds;
         if (!ok)
         {
+            dbStatus = "unreachable";
             log.LogWarning(
                 "CanConnectAsync returned false. Check ConnectionStrings__DefaultConnection. MySqlConnector does not support TrustServerCertificate; use SslMode=Required or SslMode=None (private network).");
-            return Results.Json(new { status = "degraded", database = "unreachable" }, statusCode: 503);
         }
-
-        return Results.Json(new { status = "ok", database = "connected" });
     }
     catch (Exception ex)
     {
+        dbStatus = "error";
         log.LogError(ex, "Database health check failed.");
-        return Results.Json(new { status = "degraded", database = "error" }, statusCode: 503);
     }
+
+    var now = DateTimeOffset.UtcNow;
+    var heartbeatAgeSeconds = workerTelemetry.LastHeartbeatUtc is null
+        ? (double?)null
+        : (now - workerTelemetry.LastHeartbeatUtc.Value).TotalSeconds;
+    var workerIsStale = workerTelemetry.IsRunning && heartbeatAgeSeconds is > 120;
+    var workerStatus = !workerTelemetry.IsRunning
+        ? "stopped"
+        : workerIsStale
+            ? "stale"
+            : "running";
+
+    var overallStatus = dbStatus == "ok" && workerStatus == "running"
+        ? "ok"
+        : dbStatus == "ok"
+            ? "degraded"
+            : "unhealthy";
+    var statusCode = overallStatus == "ok" ? 200 : 503;
+
+    var payload = new
+    {
+        status = overallStatus,
+        database = new
+        {
+            status = dbStatus,
+            latencyMs = dbLatencyMs
+        },
+        worker = new
+        {
+            status = workerStatus,
+            queueBacklog = queue.PendingCount,
+            lastHeartbeatUtc = workerTelemetry.LastHeartbeatUtc,
+            lastFailureUtc = workerTelemetry.LastFailureUtc,
+            lastError = workerTelemetry.LastError
+        },
+        checkedAtUtc = startedAt
+    };
+
+    if (statusCode != 200)
+        log.LogWarning("Health check returned {Status}.", overallStatus);
+
+    return Results.Json(payload, statusCode: statusCode);
 })
 .WithTags("System")
 .WithSummary("Sağlık kontrolü")
@@ -394,9 +503,16 @@ app.MapTopicEndpoints();
 app.MapExamEndpoints();
 app.MapStudyTimeEndpoints();
 app.MapStatsEndpoints();
-app.MapScheduleEndpoints();
 app.MapProblemNoteEndpoints();
+app.MapGoalEndpoints();
+app.MapRecommendationEndpoints();
+app.MapPlannerEndpoints();
+app.MapNotificationEndpoints();
+app.MapAdaptationEndpoints();
 app.MapAppConfigEndpoints();
+app.MapAnalyticsEndpoints();
+app.MapAdminPlannerEndpoints();
+app.MapAdminFeatureFlagEndpoints();
 
 //  Development: demo kullanıcı ve örnek veri (demo@ykstakip.local yoksa bir kez eklenir)
 if (app.Environment.IsDevelopment()

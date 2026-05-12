@@ -24,6 +24,10 @@ namespace YksTakipApp.Api.Validators
             RuleFor(x => x.TopicId)
                 .Must(id => id is null or > 0)
                 .WithMessage("Geçerli bir konu seçin.");
+
+            RuleFor(x => x.ClientRequestId)
+                .MaximumLength(100)
+                .When(x => !string.IsNullOrWhiteSpace(x.ClientRequestId));
         }
     }
 }

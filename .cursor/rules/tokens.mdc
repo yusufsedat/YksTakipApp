@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+# Tokens
+
+- Be concise
+- No explanations unless needed
+
+- Show only changed files
+- Do not print full files
+
+- Prefer diffs
+
+- No boilerplate
+- No filler text
+
+- Max 1–2 sentence explanation

@@ -9,6 +9,7 @@ namespace YksTakipApp.Api.DTOs
         public int? UserId { get; set; }
         public int DurationMinutes { get; set; }
         public string Subject { get; set; } = "";
+        public string? ClientRequestId { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
     }
 }

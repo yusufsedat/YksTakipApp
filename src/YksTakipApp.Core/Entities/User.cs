@@ -12,11 +12,15 @@ namespace YksTakipApp.Core.Entities
         public DateTime? RefreshTokenExpiry { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public int SmartOnboardingSkipCount { get; set; }
+        public Guid? ActiveGoalVersionId { get; set; }
+
         // Navigation
         public ICollection<UserTopic> UserTopics { get; set; } = new List<UserTopic>();
         public ICollection<StudyTime> StudyTimes { get; set; } = new List<StudyTime>();
         public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
-        public ICollection<ScheduleEntry> ScheduleEntries { get; set; } = new List<ScheduleEntry>();
         public ICollection<ProblemNote> ProblemNotes { get; set; } = new List<ProblemNote>();
+        public ICollection<UserGoal> UserGoals { get; set; } = new List<UserGoal>();
+        public ICollection<ScheduleTask> ScheduleTasks { get; set; } = new List<ScheduleTask>();
     }
 }

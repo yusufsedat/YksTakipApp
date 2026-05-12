@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using YksTakipApp.Application.Services;
 using YksTakipApp.Core.Entities;
 using YksTakipApp.Core.Interfaces;
@@ -16,7 +17,10 @@ public class TopicServiceTests
     {
         _topicRepositoryMock = new Mock<IRepository<Topic>>();
         _userTopicRepositoryMock = new Mock<IRepository<UserTopic>>();
-        _topicService = new TopicService(_topicRepositoryMock.Object, _userTopicRepositoryMock.Object);
+        _topicService = new TopicService(
+            _topicRepositoryMock.Object,
+            _userTopicRepositoryMock.Object,
+            NullLogger<TopicService>.Instance);
     }
 
     [Fact]

@@ -8,7 +8,8 @@ namespace YksTakipApp.Core.Interfaces
         Task<IEnumerable<Topic>> GetAllAsync();
         Task<IEnumerable<UserTopic>> GetUserTopicsAsync(int userId);
         Task AddUserTopicAsync(int userId, int topicId);
-        Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status);
+        Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status, bool learnedExternally = false);
+        Task RequestPriorityAsync(int userId, int topicId);
         Task RemoveUserTopicAsync(int userId, int topicId);
     }
 }

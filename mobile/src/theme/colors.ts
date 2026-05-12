@@ -36,6 +36,10 @@ export type ThemeColors = {
   statusProgress: string;
   statusDone: string;
   statusReview: string;
+  /** Teşhis (DiagnosticTest) görev kartı */
+  diagnosticBg: string;
+  diagnosticBorder: string;
+  diagnosticText: string;
   celebrateBg: string;
   celebrateBorder: string;
   celebrateText: string;
@@ -106,6 +110,9 @@ export const lightColors: ThemeColors = {
   statusProgress: '#0d9488',
   statusDone: '#2d6a4f',
   statusReview: '#4c63b6',
+  diagnosticBg: '#f0f4ff',
+  diagnosticBorder: '#93b4fc',
+  diagnosticText: '#3d4f8f',
   celebrateBg: '#e8f5ef',
   celebrateBorder: '#a3d4b8',
   celebrateText: '#1b4332',
@@ -176,6 +183,9 @@ export const darkColors: ThemeColors = {
   statusProgress: '#2dd4bf',
   statusDone: '#6bbf8f',
   statusReview: '#93b4fc',
+  diagnosticBg: '#1a2740',
+  diagnosticBorder: '#4c63b6',
+  diagnosticText: '#c5daf7',
   celebrateBg: '#15261e',
   celebrateBorder: '#2d5a45',
   celebrateText: '#86d9a8',

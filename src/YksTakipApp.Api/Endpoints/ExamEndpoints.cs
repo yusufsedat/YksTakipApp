@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using YksTakipApp.Api.DTOs;
 using YksTakipApp.Core.Entities;
 using YksTakipApp.Core.Interfaces;
-using System.Security.Claims;
 using YksTakipApp.Api.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace YksTakipApp.Api.Endpoints
 {
@@ -16,11 +16,15 @@ namespace YksTakipApp.Api.Endpoints
                 ExamResultRequest req,
                 IValidator<ExamResultRequest> validator,
                 IExamService service,
-                HttpContext ctx) =>
+                HttpContext ctx,
+                ILoggerFactory loggerFactory) =>
             {
                 var userId = ctx.GetUserId();
                 if (userId is null)
                     return Results.Unauthorized();
+                var idempotencyKey = RequestContextHelper.ResolveIdempotencyKey(ctx, req.ClientRequestId);
+                var log = loggerFactory.CreateLogger("ExamEndpoints");
+                using var _ = RequestContextHelper.PushOperationContext(ctx, "Exam.Add", userId, idempotencyKey);
 
                 var validation = await validator.ValidateAsync(req);
                 if (!validation.IsValid)
@@ -34,12 +38,16 @@ namespace YksTakipApp.Api.Endpoints
                     Blank = d.Blank
                 });
 
-                await service.AddExamAsync(
+                var result = await service.AddExamIdempotentAsync(
                     userId.Value, req.ExamName, req.Date, req.NetTyt, req.NetAyt,
                     req.ExamType, req.Subject, req.DurationMinutes, req.Difficulty,
-                    req.ErrorReasons, details);
+                    req.ErrorReasons, details, idempotencyKey);
+                if (result.IsReplay)
+                    log.LogWarning("Exam add replayed with {Result}.", "replay");
+                else
+                    log.LogInformation("Exam add finished with {Result}.", "success");
 
-                return Results.Ok(new { message = "Deneme sonucu eklendi." });
+                return Results.Ok(new { message = "Deneme sonucu eklendi.", replay = result.IsReplay, itemId = result.Entity.Id });
             })
             .RequireRateLimiting("writes")
             .WithTags("Exams")

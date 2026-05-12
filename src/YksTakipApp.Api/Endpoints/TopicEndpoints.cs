@@ -2,8 +2,8 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 using YksTakipApp.Api.DTOs;
+using YksTakipApp.Api.Helpers;
 using YksTakipApp.Core.Interfaces;
-using YksTakipApp.Api.Helpers; 
 
 namespace YksTakipApp.Api.Endpoints
 {
@@ -37,9 +37,26 @@ namespace YksTakipApp.Api.Endpoints
             })
                 .RequireAuthorization("AdminOnly")
                 .RequireRateLimiting("writes")
-                .WithTags("Topics")
-                .WithSummary("Global konu ekle (Admin)")
-                .WithDescription("Sadece Admin rolündeki kullanıcılar global konu kataloğuna yeni konu ekleyebilir.");
+            .WithTags("Topics")
+            .WithSummary("Global konu ekle (Admin)")
+            .WithDescription("Sadece Admin rolündeki kullanıcılar global konu kataloğuna yeni konu ekleyebilir.");
+
+            app.MapGet("/topics/{topicId:int}/progress", [Authorize] async (
+                int topicId,
+                IAdaptationService adaptation,
+                HttpContext ctx,
+                CancellationToken ct) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null)
+                    return Results.Unauthorized();
+
+                var progress = await adaptation.GetTopicProgressAsync(userId.Value, topicId, ct);
+                return progress is null ? Results.NotFound() : Results.Ok(progress);
+            })
+            .WithTags("Topics")
+            .WithSummary("Konu ilerleme / kilit / mastery")
+            .WithDescription("Kullanıcının bu konudaki mastery ve IsLocked bilgisini döner.");
 
             // Tüm konuları listeleme
             app.MapGet("/topics", async (ITopicService service, IMemoryCache cache, ILoggerFactory loggerFactory, int page = 1, int pageSize = 20, string? sort = null) =>
@@ -94,7 +111,8 @@ namespace YksTakipApp.Api.Endpoints
                     return Results.Unauthorized();
 
                 var data = await service.GetUserTopicsAsync(userId.Value);
-                return Results.Ok(data);
+                var payload = data.Select(UserTopicMapping.ToResponseDto);
+                return Results.Ok(payload);
             })
             .WithTags("Topics")
             .WithSummary("Kullanıcının konularını getir")
@@ -147,7 +165,11 @@ namespace YksTakipApp.Api.Endpoints
 
                 try
                 {
-                    await service.UpdateUserTopicAsync(userId.Value, req.TopicId, req.Status);
+                    await service.UpdateUserTopicAsync(
+                        userId.Value,
+                        req.TopicId,
+                        req.Status,
+                        req.LearnedExternally == true);
                     return Results.Ok(new { message = "Durum güncellendi." });
                 }
                 catch (InvalidOperationException ex)
@@ -184,6 +206,65 @@ namespace YksTakipApp.Api.Endpoints
             .WithTags("Topics")
             .WithSummary("Kullanıcı listesinden konu kaldır")
             .WithDescription("Belirtilen konuyu sadece kullanıcının kişisel listesinden kaldırır; global katalogdan silmez.");
+
+            app.MapPost("/topics/{topicId:int}/request-priority", [Authorize] async (
+                int topicId,
+                ITopicService topicService,
+                IDynamicPlannerService plannerService,
+                IIdempotentCommandExecutor idempotent,
+                HttpContext ctx,
+                ILoggerFactory loggerFactory,
+                CancellationToken ct) =>
+            {
+                var userId = ctx.GetUserId();
+                if (userId is null)
+                    return Results.Unauthorized();
+                var idempotencyKey = RequestContextHelper.ResolveIdempotencyKey(ctx, null);
+                var log = loggerFactory.CreateLogger("TopicEndpoints");
+
+                try
+                {
+                    return await idempotent.ExecuteAsync<RequestPriorityResponse>(
+                        ctx,
+                        userId.Value,
+                        "topic.request-priority",
+                        idempotencyKey,
+                        async token =>
+                        {
+                            await topicService.RequestPriorityAsync(userId.Value, topicId);
+                            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                            var weekStart = StartOfWeekMonday(today);
+                            var correlationId = ctx.Request.Headers["X-Correlation-Id"].FirstOrDefault() ?? ctx.TraceIdentifier;
+                            var metadata = new YksTakipApp.Core.Models.PlannerCallMetadata(correlationId, idempotencyKey);
+                            var planResult = await plannerService.GenerateWeeklyPlanAsync(userId.Value, weekStart, metadata, token);
+                            return new RequestPriorityResponse
+                            {
+                                Message = "Konu öncelik talebi alındı ve plan güncellendi.",
+                                Plan = ScheduleTaskMapping.ToResponse(planResult),
+                                Tasks = planResult.Tasks.Select(ScheduleTaskMapping.ToDto).ToList()
+                            };
+                        },
+                        Results.Ok,
+                        log,
+                        ct);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // UserTopic ilişkisi yoksa 404 (kaynak bulunamadı) — daha önce 400 dönüyordu.
+                    return Results.NotFound(new { message = ex.Message });
+                }
+            })
+            .RequireRateLimiting("writes")
+            .WithTags("Topics")
+            .WithSummary("Konu için öne çek talebi oluştur")
+            .WithDescription("Konuya öncelik talebi atar ve dinamik planı hemen yeniden üretir.");
+        }
+
+        private static DateOnly StartOfWeekMonday(DateOnly date)
+        {
+            var day = (int)date.DayOfWeek;
+            var diff = day == 0 ? -6 : 1 - day;
+            return date.AddDays(diff);
         }
     }
 }

@@ -1,5 +1,27 @@
 import type { TopicDto, UserTopicDto } from '../types/api';
 
+/** API bazen enum'u string (JsonStringEnumConverter) döndürür; UI sayısal 0–3 bekler. */
+export function coerceUserTopicStatus(status: unknown): number {
+  if (typeof status === 'number' && Number.isFinite(status)) return status;
+  if (typeof status === 'string') {
+    const byName: Record<string, number> = {
+      notStarted: 0,
+      inProgress: 1,
+      completed: 2,
+      needsReview: 3,
+      NotStarted: 0,
+      InProgress: 1,
+      Completed: 2,
+      NeedsReview: 3,
+    };
+    const k = status.trim();
+    if (k in byName) return byName[k];
+    const n = Number(k);
+    if (Number.isFinite(n)) return n;
+  }
+  return 0;
+}
+
 /** Konular ekranıyla aynı: test/deneme adları katalogdan çıkarılır. */
 export function isLikelyTestTopicName(name: string): boolean {
   const n = name.trim().toLocaleLowerCase('tr');
@@ -14,6 +36,9 @@ export type UserTopicRow = {
   category: string;
   subject: string;
   status: number;
+  masteryStatus: string;
+  masteryConfidence: number;
+  isLocked: boolean;
 };
 
 export function mergeUserTopicsWithCatalog(
@@ -29,7 +54,10 @@ export function mergeUserTopicsWithCatalog(
       name: t?.name ?? `Konu #${ut.topicId}`,
       category: t?.category ?? '—',
       subject: t?.subject?.trim() ? t.subject : '—',
-      status: ut.status,
+      status: coerceUserTopicStatus(ut.status),
+      masteryStatus: typeof ut.masteryStatus === 'string' ? ut.masteryStatus : 'notStarted',
+      masteryConfidence: typeof ut.masteryConfidence === 'number' ? ut.masteryConfidence : 0,
+      isLocked: ut.isLocked === true,
     };
   });
   merged.sort((a, b) => a.name.localeCompare(b.name, 'tr'));

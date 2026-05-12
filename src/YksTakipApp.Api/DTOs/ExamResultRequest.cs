@@ -19,6 +19,7 @@ namespace YksTakipApp.Api.DTOs
         public int? DurationMinutes { get; set; }
         public int? Difficulty { get; set; }
         public string? ErrorReasons { get; set; }
+        public string? ClientRequestId { get; set; }
         public List<ExamDetailInput> Details { get; set; } = new();
     }
 }

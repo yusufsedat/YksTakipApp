@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using YksTakipApp.Core.Entities;
 using YksTakipApp.Core.Interfaces;
 using System.Data.Common;
@@ -9,11 +10,16 @@ namespace YksTakipApp.Application.Services
     {
         private readonly IRepository<Topic> _topicRepo;
         private readonly IRepository<UserTopic> _userTopicRepo;
+        private readonly ILogger<TopicService> _log;
 
-        public TopicService(IRepository<Topic> topicRepo, IRepository<UserTopic> userTopicRepo)
+        public TopicService(
+            IRepository<Topic> topicRepo,
+            IRepository<UserTopic> userTopicRepo,
+            ILogger<TopicService> log)
         {
             _topicRepo = topicRepo;
             _userTopicRepo = userTopicRepo;
+            _log = log;
         }
 
         public async Task AddTopicAsync(string name, string category, string subject = "")
@@ -66,7 +72,7 @@ namespace YksTakipApp.Application.Services
             }
         }
 
-        public async Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status)
+        public async Task UpdateUserTopicAsync(int userId, int topicId, TopicStatus status, bool learnedExternally = false)
         {
             var existing = (await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
 
@@ -76,6 +82,19 @@ namespace YksTakipApp.Application.Services
             }
 
             existing.Status = status;
+            if (status == TopicStatus.Completed && existing.IsPriorityRequested)
+            {
+                existing.IsPriorityRequested = false;
+                existing.PriorityResolvedAt = DateTime.UtcNow;
+                _log.LogInformation("Priority resolved by completion for user {UserId}, topic {TopicId}.", userId, topicId);
+            }
+
+            if (learnedExternally)
+            {
+                AdaptationService.ApplyLearnedExternally(existing);
+                _log.LogInformation("User {UserId} marked topic {TopicId} as LearnedExternally.", userId, topicId);
+            }
+
             _userTopicRepo.Update(existing);
             await _userTopicRepo.SaveChangesAsync();
         }
@@ -87,6 +106,21 @@ namespace YksTakipApp.Application.Services
                 throw new InvalidOperationException("Bu konu listenizde yok.");
 
             _userTopicRepo.Remove(existing);
+            await _userTopicRepo.SaveChangesAsync();
+        }
+
+        public async Task RequestPriorityAsync(int userId, int topicId)
+        {
+            var existing = (await _userTopicRepo.FindForReadAsync(ut => ut.UserId == userId && ut.TopicId == topicId)).FirstOrDefault();
+            if (existing is null)
+                throw new InvalidOperationException("Bu konu listenizde yok.");
+
+            var now = DateTime.UtcNow;
+            existing.IsPriorityRequested = true;
+            existing.PriorityRequestedAt = now;
+            existing.PriorityResolvedAt = null;
+            existing.PriorityExpiresAt = now.AddDays(7);
+            _userTopicRepo.Update(existing);
             await _userTopicRepo.SaveChangesAsync();
         }
     }

@@ -1,110 +1,121 @@
 # YksTakipApp — Proje Özeti
 
-## PROJE HAKKINDA
-
-**YksTakipApp**, YKS öğrencileri için geliştirilmiş bir ders ve sınav takip sistemidir. Çalışma süreleri, konu ilerlemesi, deneme sonuçları, haftalık/aylık program ve notlar tek bir API ve mobil istemci üzerinden yönetilir.
-
-### Projenin amacı
-
-- Günlük çalışma sürelerini kaydetmek ve konuya bağlamak
-- Konu listesi ve durum takibi (TYT/AYT, katalog + kullanıcı listesi)
-- Deneme sonuçlarını (TYT/AYT/YDT/branş) kaydetmek ve istatistiklerle analiz etmek
-- Haftalık/aylık ders programı (schedule) ve hatırlatıcılar
-- Küçük zaferler, grafikler ve hedef net çizgileriyle motivasyon ve geri bildirim
-
-### Teknik mimari
-
-| Katman | Teknoloji |
-|--------|-----------|
-| Backend | .NET 8 Minimal API (C#), Clean Architecture |
-| Veritabanı | MySQL 8 (EF Core migrations) |
-| Kimlik doğrulama | JWT, BCrypt, Admin/User rolleri |
-| Mobil | Expo / React Native (TypeScript), Expo Router |
-| Dağıtım (hedef) | Railway (API + MySQL plugin veya harici DB; `Dockerfile` kökten build) |
-
-### Mevcut durum (özet)
-
-- **Backend API**: Özellik seti tamam; production ortamına deploy kullanıcı sürecine bağlı.
-- **Mobil uygulama**: Ana akışlar (auth, konular, çalışma, denemeler, program, istatistikler, not defteri, ayarlar) uygulanmış; uygulama tarafı şimdilik “tamam” kabul edilebilir.
-- **Testler**: Birim ve entegrasyon testleri kısmen mevcut; kapsam genişletilebilir.
-- **Genel ilerleme**: Ürün özellikleri açısından yüksek; operasyonel (deploy, mağaza, izleme) adımlar sırada.
+Bu belge, repodaki **gerçek yapı ve özellikler**e göre güncellenir: backend minimal API, MySQL + EF Core, Expo (React Native) istemci.
 
 ---
 
-## YAPILANLAR
+## 1. Ürün ne işe yarıyor?
 
-### Backend (.NET 8)
+**YksTakipApp**, YKS hazırlığında öğrencinin **konu takibi**, **çalışma süreleri**, **deneme sonuçları**, **haftalık/aylık program**, **istatistik ve motivasyon geri bildirimi** ve **çözemediği sorular için not defteri (Kumbara)** işlerini tek uygulamada toplar.
 
-- **Katmanlar**: Core, Application, Infrastructure, API; Repository, DI, FluentValidation.
-- **Varlıklar (özet)**: User, Topic, UserTopic, StudyTime, ExamResult + ExamDetail, ScheduleEntry, ProblemNote; ilişkiler ve migrations.
-- **Kimlik**: `POST /users/register`, `POST /users/login`, `GET /users/me`; rate limit, JWT.
-- **Konular**: Katalog, kullanıcı konuları, admin konu ekleme, durum güncelleme.
-- **Çalışma**: `POST /studytime/add`, `GET /studytime/list` (sayfalama); isteğe bağlı `TopicId` (kullanıcı listesi doğrulaması).
-- **Denemeler**: Ekleme, listeleme, silme; sınav türü ve detay satırları.
-- **İstatistikler**: Özet, haftalık dk (tam 7 gün), haftalık karşılaştırma, küçük zaferler (`completedTopicNames`), deneme istatistikleri (TYT/AYT/branş), `netTrend` (son 10).
-- **Program**: `GET/POST/PUT/DELETE /schedule/*`; isteğe bağlı `TopicId`.
-- **Problem notları**: CRUD benzeri uçlar (proje yapısına göre).
-- **Güvenlik**: CORS, rate limiting, güvenlik başlıkları; production’da sırlar ortam değişkenleri / Railway secrets ile.
+### Özellikler (işlevsel)
 
-### Mobil (Expo / React Native)
-
-- **Navigasyon**: Auth + (app) sekmeler; güvenli alan ve tema.
-- **Ekranlar**: Konular, çalışmalar, denemeler, istatistikler, program, not defteri, araçlar, ayarlar.
-- **Ortak**: API istemcisi, JWT saklama, `TopicPickerModal` ve `userTopicRows` (Konular listesi ile uyumlu konu seçimi).
-- **Kronometre + bildirim**: Android tarafında foreground bildirim ile canlı süre gösterimi; bildirimden `Duraklat` / `Bitir` aksiyonları ve durumun yerel kalıcı saklanması (`AsyncStorage`).
-- **İstatistikler**: Haftalık sütun grafik, net eğilimi, hedef net çizgisi (AsyncStorage), deneme listesi filtreleri, branş ders chip’leri.
-- **Diğer**: Deneme formu, tarih/saat doğrulamaları, program slotu + konu bağlantısı vb.
+| Alan | Kullanıcıya sunduğu değer |
+|------|---------------------------|
+| **Kimlik** | Kayıt, giriş, JWT + refresh token; profil (`/users/me` ile konu listesi + özet istatistik). |
+| **Konular** | Sistem kataloğundan (sayfalı) konu görüntüleme; kullanıcıya özel takip listesi; durum güncelleme; admin için kataloga konu ekleme. |
+| **Çalışma süresi** | Tarih/dakika kaydı; isteğe bağlı konu bağlantısı; liste (sayfalama); toplu oluşturma ve uyumluluk uçları; çevrimdışı kuyruk + Android kronometre foreground bildirimi (Duraklat/Bitir). |
+| **Denemeler** | TYT / AYT / YDT / branş türleri; net ve ders bazlı detay satırları; listeleme, ekleme, silme. |
+| **Program** | Haftalık veya aylık tekrar; gün + başlangıç/bitiş dakikası; başlık; isteğe bağlı konu; CRUD. Ayrıca hedef bazlı haftalık görev üretimi, görev tamamlama/atlama ve dinamik plan güncelleme akışları. Churn kontrolü haftalık plan sorgusunda otomatik tetiklenir. |
+| **İstatistikler** | Son 7 gün özeti; günlük dakika serisi (7 gün); haftalık ilerleme karşılaştırması; “zaferler” (deneme serisi + konu tamamlama branş/ders bazında); TYT/AYT/branş deneme istatistikleri (ortalama net, son denemeler, net eğilimi, ders ortalamaları, branşta zorluk dağılımı vb.). |
+| **Hedefler ve öneriler** | Hedef oluşturma/güncelleme (günlük kapasite min 30 dk doğrulaması), onboarding tabanlı plan başlangıcı, konu ağırlığı + performansa göre öneri ve adaptasyon motoru. |
+| **Kumbara (problem notları)** | Fotoğraflı soru notu; etiketler; çözüldü işareti; Cloudinary veya stub depolama; soft delete. |
+| **Özet ekranı** | YKS geri sayım kartı, profil özeti, haftalık çalışma trendi, deneme serisi vurgusu. |
+| **Araçlar hub** | Çalışmalar, program, Kumbara, görünüm (tema) için tek giriş noktası. |
+| **Sürüm kontrolü** | `GET /api/app-config/check-version` ile zorunlu/isteğe bağlı güncelleme bilgisi (mobil açılışta). |
 
 ---
 
-## SONRAKI ADIMLAR (ÖNCELİK)
+## 2. Teknik mimari
 
-### Operasyon ve yayın
+### 2.1 Genel
 
-1. **Railway**: Servis oluşturma, `ConnectionStrings__DefaultConnection`, `Jwt__Key` / `Jwt__Issuer` / `Jwt__Audience`, `CORS__AllowedOrigins`, migration (`dotnet ef database update`), sağlık kontrolü.
-2. **Mobil dağıtım**: EAS Build, ortam değişkenleri (`API_BASE_URL`), mağaza listeleri ve gizlilik metni.
-3. **İzleme**: Railway logları veya harici APM (isteğe bağlı).
+| Bileşen | Teknoloji |
+|---------|-----------|
+| API | **.NET 8** Minimal API, `FluentValidation`, **JWT Bearer**, **Pomelo EF Core** + **MySQL 8** |
+| Çözüm katmanları | **Core** (entity + arayüzler), **Application** (servisler), **Infra** (EF, repository), **Api** (endpoint’ler, DTO, middleware) |
+| Mobil | **Expo** + **React Native** (TypeScript), **Expo Router** (dosya tabanlı rota) |
+| Loglama (API) | **Serilog**, konsolda **RenderedCompactJsonFormatter**; istek günlüğü (test ortamı hariç) |
+| Dağıtım | API için `src/YksTakipApp.Api/Dockerfile`; hedef platform örneği **Railway** + MySQL |
 
-### Kalite
+### 2.2 Backend önemli parçalar
 
-1. **Test**: Servis ve API entegrasyon testlerinin kapsamını artırma.
-2. **Yedekleme / dışa aktarma**: İleride kullanıcı verisini JSON/CSV dışa aktarma (ürün kararı).
+- **Kimlik:** BCrypt ile parola; access token (~1 saat); refresh token DB’de; `/users/refresh-token` ve legacy `/refresh-token`.
+- **Yetki:** `AdminOnly` / `UserOnly` politikaları; admin konu oluşturma gibi uçlar role bağlı.
+- **Rate limiting:** Örn. login ve yazma pencereleri (`Program.cs` içinde tanımlı limiter isimleri).
+- **CORS:** Geliştirmede geniş; production’da `CORS__AllowedOrigins` (virgülle ayrı liste).
+- **Güvenlik başlıkları:** Production’da X-Content-Type-Options, X-Frame-Options, HSTS (HTTPS), vb.
+- **Hata:** `GlobalExceptionMiddleware` ile tutarlı HTTP yanıtları.
+- **Sağlık:** `GET /health` — DB bağlantısı; izleme uyumlu JSON (`ok` / `degraded`).
+- **Geliştirme:** İsteğe bağlı demo seed (`DevDataSeeder`, `AdminDevSeeder`); `SKIP_DEV_SEED` ile kapatılabilir; dev’de migration uygulama.
+- **Problem notu görselleri:** `IProblemNoteImageStorage` — **Cloudinary** veya **stub** (yapılandırmaya bağlı).
 
-### Dokümantasyon
+### 2.3 Veri modeli (özet)
 
-1. Swagger/Postman kullanımı (iç ekip).
-2. Kısa “kurulum ve çalıştırma” README (repo kökünde, mevcutsa güncelleme).
+Kullanıcı; konu (katalog); kullanıcı–konu ilişkisi ve durum; çalışma süresi (tarih, dakika, isteğe bağlı konu); deneme sonucu + ders detayları; program girdisi (tekrar tipi, gün, dakika aralığı, başlık, isteğe bağlı konu); problem notu (görsel URL, etiket, çözüldü, silinme zamanı). İndeksler için ayrı migration’lar (performans fazı) mevcut.
+
+### 2.4 HTTP yüzeyi (gruplar)
+
+- **Users:** `POST /users/register`, `POST /users/login`, `POST /users/refresh-token`, `GET /users/me` (profil + kullanıcı konuları + özet sayılar).
+- **Topics:** katalog `GET /topics` (public/cache); kullanıcı konuları ve CRUD/admin uçları.
+- **StudyTime:** ekleme, çoklu oluşturma, uyumluluk uçları, sayfalı liste.
+- **Exam:** ekleme, liste, silme.
+- **Stats:** `/stats/summary`, `/weekly`, `/progress`, `/wins`, `/stats/exam/tyt|ayt|brans`.
+- **Goals:** hedef oluşturma/listeleme, durum görüntüleme, atlama.
+- **Planner:** haftalık plan üretme/sorgulama, görev durum güncelleme.
+- **Recommendations:** kişiselleştirilmiş konu önerileri.
+- **Adaptation:** performans değerlendirme ve dinamik plan uyarlama.
+- **Event wiring:** exam kaydı sonrası adaptation değerlendirmesi background worker kuyruğu ile fire-and-forget çalışır.
+- **Schedule:** liste, ekleme, güncelleme, silme.
+- **Problem notes:** liste, ekleme, güncelleme, silme.
+- **App config:** `GET /api/app-config/check-version?platform=…`
+- **Sistem:** `/`, `/health`, geliştirmede `/dbtest`.
+
+### 2.5 Testler
+
+`tests/YksTakipApp.Tests` altında **servis birim testleri** (kullanıcı, konu, çalışma, deneme, program, istatistik, problem notu) ve **entegrasyon testleri** (kullanıcı ve konu endpoint’leri). Kapsam genişletilebilir.
 
 ---
 
-## OPSİYONEL ÖZELLİK FİKİRLERİ (İLERİDE)
+## 3. Mobil uygulama (Expo)
 
-Bunlar zorunlu değil; ürün olgunlaştıkça değerlendirilebilir:
+### 3.1 Yapı
 
-- **Bildirimler (ek)**: Günlük çalışma veya program slotu için planlı hatırlatıcı/push (kronometre bildirimi dışında).
-- **Çevrimdışı**: Son verileri önbelleğe alıp bağlantı gelince senkron (karmaşıklık yüksek).
-- **Widget**: Ana ekranda bugünkü program veya çalışma özeti (iOS/Android).
-- **Hedefler**: Sadece net değil; haftalık dk hedefi ve basit rozetler.
-- **Yönetici paneli (web)**: Sadece admin için konu kataloğu ve kullanıcı raporu (ayrı küçük proje).
+- **Rotalar:** `mobile/app/` — `(auth)` giriş/kayıt/KVKK; `(app)` sekme + gizli rotalar (çalışma, program, Kumbara, ayarlar, hedef onboarding, akıllı plan, dinamik plan, öneriler).
+- **Sekmeler (alt bar):** Özet, Konular, Araçlar, Denemeler, İstatistik.
+- **Kütüphane:** `mobile/src/lib/` — `api.ts` (axios, JWT, refresh interceptor), `auth.tsx`, kronometre ve senkron yardımcıları, `log.ts`, yapılandırma.
+- **Bileşenler:** `mobile/src/components/` (ör. özet, istatistik görselleri, konu seçici, geri sayım).
+- **Tema:** `ThemeContext` + renkler; ayarlardan görünüm.
+- **API tipleri:** `mobile/src/types/api.ts` (DTO’lar ile uyumlu).
 
----
+### 3.2 İstemci davranışı
 
-## ÖNEMLİ NOTLAR
-
-1. Production’da `CORS__AllowedOrigins` ve güçlü `Jwt:Key` (en az 32 karakter).
-2. Hassas bilgiler için Railway (veya host) secret’ları / güvenli env; repoda sırlar tutulmamalı.
-3. Deploy sonrası `dotnet ef database update` ile şema güncel tutulmalı.
-4. Mobil tarafta API tabanı URL’si ortam dosyası veya build-time config ile verilmeli.
+- API tabanı: `EXPO_PUBLIC_API_URL` / config (`mobile/src/lib/config.ts`).
+- Oturum: SecureStore + refresh ile sessiz yenileme.
+- Çalışma kaydı: ağ yoksa kuyruklama (`pendingStudyTimes`); Android’de foreground servis bildirimi.
 
 ---
 
-## PROJE DURUMU ÖZETİ
+## 4. Operasyon ve güvenlik notları
+
+1. **Production:** `Jwt__Key` (≥32 karakter), `Jwt__Issuer`, `Jwt__Audience`, `ConnectionStrings__DefaultConnection` (MySQL; Railway’de boş genişleme hatalarına karşı doğrulanmış bağlantı), `CORS__AllowedOrigins`.
+2. Sırlar repoda değil; ortam / secret store.
+3. Deploy sonrası: `dotnet ef database update` (veya pipeline migration).
+4. Mobil: EAS ve mağaza için sürüm, gizlilik metni, API URL.
+
+---
+
+## 5. Durum ve yol haritası (özet)
 
 | Bileşen | Durum |
 |---------|--------|
-| Backend API | Özellik olarak hazır; deploy ortamına bağlı |
-| Mobil uygulama | Ana kapsam tamamlandı; Android kronometre foreground bildirimi (canlı sayaç + Duraklat/Bitir) aktif |
-| Railway / prod | Sıradaki operasyonel adım |
-| Test & izleme | Kısmen; güçlendirilebilir |
+| API işlevleri | Ana domain uçları + hedef/planlayıcı/öneri/adaptasyon endpoint’leri uygulanmış; sağlık ve güvenlik başlıkları aktif |
+| Mobil | Ana akışlar, Android kronometre bildirimi ve hedef tabanlı plan ekranları mevcut |
+| Test | Servis + kısmi entegrasyon; artırılabilir |
+| Prod deploy | Tamamlandı (ortam değişkenleri + migration uygulanmış) |
 
-*Son güncelleme: Nisan 2026*
+**İleride düşünülebilecekler (ürün kararı):** planlı hatırlatıcılar, çevrimdışı tam senkron, widget, haftalık hedef/rozet, veri dışa aktarma, ayrı admin web arayüzü.
+
+---
+
+*Son güncelleme: 5 Mayıs 2026*
